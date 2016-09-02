@@ -6,6 +6,7 @@
 package sci
 
 import "github.com/pkg/errors"
+import "regexp"
 
 const (
 	Length Measure = "Length"
@@ -14,6 +15,13 @@ const (
 
 var (
 	ErrIncompatibleTypes = errors.New("incompatible types")
+	ErrBlankValue        = errors.New("blank value string")
+)
+
+var (
+	MagnitudeRegexp = regexp.MustCompile(
+		"^((-)?([1-9][0-9]*)(\\.[0-9]+)?)([^0-9]|$)",
+	)
 )
 
 // Unit represents any unit of measure
@@ -47,8 +55,21 @@ type MulUnit []Unit
 type NilUnit struct {
 }
 
+// MagnitudeError represents the error produces when trying to operate on a
+// value whose magnitude (the M field) is invalid.
+type MagnitudeError struct {
+	M string
+}
+
 // Measure represents a domain of measurement, such as length, time, or mass.
 type Measure string
+
+// ParseError represents the error produces when trying to operate on a
+// value whose magnitude (the M field) is invalid.
+type ParseError struct {
+	Input        string
+	FailurePhase string
+}
 
 // Prefix represents a unit prefix.
 type Prefix struct {
@@ -80,8 +101,12 @@ type Value struct {
 	U Unit
 }
 
+// Interface conformity confirmations
 var _ Unit = &BaseUnit{}
 var _ Unit = &DefinedUnit{}
 var _ Unit = &NilUnit{}
 var _ Unit = &DivUnit{}
 var _ Unit = &MulUnit{}
+
+var _ error = &MagnitudeError{}
+var _ error = &ParseError{}

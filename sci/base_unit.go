@@ -6,6 +6,8 @@ func (u *BaseUnit) Compat(other Unit) bool {
 		return u == other
 	case *DefinedUnit:
 		return u == other.Base
+	case *NilUnit:
+    return true
 	default:
 		return false
 	}
