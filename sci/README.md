@@ -3,23 +3,25 @@ A go library for scientific unit calculations, powering a scientific spreadsheet
 ```go
 
   // creating values
-  x := units.Value{M: "10.001", U: units.Millimeter}
-  y := units.Value{M: "10.001", U: units.Millimeter}
+  x := &sci.Value{M: "10.001", U: si.Millimeter}
+  y := &sci.Value{M: "10.001", U: si.Millimeter}
+  z := &sci.Value{}
 
   // math
-  z, err := x.Add(y)
+  err := z.Add(x, y)
 
   // units are composite values, algebraic values
-  // acceleration
-  Acceleration = units.Div{
-    N: units.Meter,
-    D: units.Pow{ units.Second, 2 },
+
+  // acceleration (m/s^2)
+  Acceleration = sci.DivUnit{
+    N: si.Meter,
+    D: sci.MulUnit{ units.Second, units.Second },
   }
    
 
   // Defining constants
   var (
-    EarthGravity = units.MustParseValue("9.807 m/s^2")
+    EarthGravity = si.MustParseValue("9.807 m/s^2")
   )
 ```
 
