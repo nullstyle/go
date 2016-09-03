@@ -1,17 +1,10 @@
 package sci
 
 func testSystem() *System {
-	var ret System
+	ret := NewSystem("test")
 
-	ret.MustAdd(&BaseUnit{
-		Name:    "meter",
-		Measure: Length,
-	})
+	ret.MustDefineBaseUnit("meter", Length)
+	ret.MustDefineBaseUnit("sec", Time)
 
-	ret.MustAdd(&BaseUnit{
-		Name:    "sec",
-		Measure: Time,
-	})
-
-	return &ret
+	return ret
 }

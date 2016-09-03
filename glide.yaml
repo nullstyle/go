@@ -1,0 +1,8 @@
+package: github.com/nullstyle/go
+import:
+- package: github.com/pkg/errors
+- package: github.com/gedex/inflector
+testImport:
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert

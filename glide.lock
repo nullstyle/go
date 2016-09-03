@@ -1,0 +1,12 @@
+hash: 8bb51a61f06006f33a4b6598f9d4acae3edcac07b683116a5956691a1664b083
+updated: 2016-09-02T14:39:13.79107717-07:00
+imports:
+- name: github.com/gedex/inflector
+  version: 91797f1712fd58f224781be1080b8613d096187e
+- name: github.com/pkg/errors
+  version: 17b591df37844cde689f4d5813e5cea0927d8dd2
+testImports:
+- name: github.com/stretchr/testify
+  version: ""
+  subpackages:
+  - assert

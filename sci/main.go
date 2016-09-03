@@ -8,10 +8,14 @@ package sci
 import "github.com/pkg/errors"
 import "regexp"
 
+//go:generate peg -switch -inline unit_parser.peg
+
 const (
 	Length Measure = "Length"
 	Time   Measure = "Time"
 )
+
+var Nil = &NilUnit{}
 
 var (
 	ErrIncompatibleTypes = errors.New("incompatible types")
@@ -26,7 +30,6 @@ var (
 
 // Unit represents any unit of measure
 type Unit interface {
-	Compat(Unit) bool
 }
 
 // BaseUnit represents the a base unit of a given measure against which other
@@ -34,17 +37,18 @@ type Unit interface {
 type BaseUnit struct {
 	Name    string
 	Measure Measure
+
+	system *System
 }
 
-// DefinedUnit represents a unit expressed in relation to some base unit.
-type DefinedUnit struct {
-	Scalar string
-	Base   *BaseUnit
+// DerivedUnit represents a unit expressed in relation to some base unit.
+type DerivedUnit struct {
+	Value *Value
 }
 
 type DivUnit struct {
 	N Unit
-	M Unit
+	D Unit
 }
 
 type MulUnit []Unit
@@ -53,6 +57,20 @@ type MulUnit []Unit
 // unit".  NilUnit is also used to represent inverse units, such as hz (1 / s)
 // when combind using DivUnit.
 type NilUnit struct {
+}
+
+// BaseUnitAlreadyDefinedError is an error that occurs when attempting to
+// redefine the base unit used for some measure in a system of units.  A system
+// of units may only have one base unit per measure to ensure that we can define
+// any value belonging to a given measure in relation to a single base unit.
+type BaseUnitAlreadyDefinedError struct {
+	Existing *BaseUnit
+}
+
+// Converter represents a type that can convert a value of one unit into
+// another.
+type Converter interface {
+	Convert(in *Value) (*Value, error)
 }
 
 // MagnitudeError represents the error produces when trying to operate on a
@@ -78,16 +96,32 @@ type Prefix struct {
 	Aliases []string
 }
 
+// UnitAlreadyDefinedError is an error that occurs when attempting to redefine
+// the a named unit.  A given system may not have multiple units that have the
+// same name dfined within it.
+type UnitAlreadyDefinedError struct {
+	Existing Unit
+	Name     string
+}
+
+// UnitNotDefinedError is an error that occurs when attempting to lookup a unit
+// in the system.
+type UnitNotDefinedError struct {
+	// Name is the name for the unit attempted to be found
+	Name string
+}
+
 // System represents a system of measurement.
 type System struct {
 	// Name is an optional name for a system
 	Name string
 
-	// Units represents the collection of defined units
-	Units []Unit
+	// BaseUnits represents the collection of defined base units
+	BaseUnits map[Measure]*BaseUnit
 
-	// ByName is an index of the units in the system by name.
-	ByName map[string]int
+	// units represents all of the units defined in this system, base units
+	// included.
+	units map[string]Unit
 }
 
 // Value represents a value. Examples include "3 mm" or "10 m/s"
@@ -101,9 +135,19 @@ type Value struct {
 	U Unit
 }
 
+// NewSystem creates a new unit system with the given name
+func NewSystem(name string) *System {
+	var ret System
+	ret.Name = name
+	ret.BaseUnits = make(map[Measure]*BaseUnit)
+	ret.units = make(map[string]Unit)
+
+	return &ret
+}
+
 // Interface conformity confirmations
 var _ Unit = &BaseUnit{}
-var _ Unit = &DefinedUnit{}
+var _ Unit = &DerivedUnit{}
 var _ Unit = &NilUnit{}
 var _ Unit = &DivUnit{}
 var _ Unit = &MulUnit{}

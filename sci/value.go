@@ -8,9 +8,6 @@ import (
 // `l` and `r` can be added together.
 func (v *Value) Add(l, r *Value) error {
 	// TODO: compare the units for compatibility
-	if !l.U.Compat(r.U) {
-		return ErrIncompatibleTypes
-	}
 
 	var vf, lf, rf big.Float
 
@@ -36,6 +33,11 @@ func (v *Value) Add(l, r *Value) error {
 // Div divides `l` and `r` together and stores the result in `v`.
 func (v *Value) Div(l, r *Value) error {
 	return nil
+}
+
+// Eq checks v and other for equality
+func (v *Value) Eq(other *Value) bool {
+	return false
 }
 
 // Mul multiplies `l` and `r` together and stores the result in `v`.

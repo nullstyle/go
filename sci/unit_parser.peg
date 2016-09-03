@@ -1,0 +1,66 @@
+package sci
+
+type UnitParser Peg {
+  System *System
+  Result Unit
+  Err error
+  Stack []Unit
+}
+
+first <- sp unit+ !. { 
+  if len(p.Stack) != 1 {
+    p.Err = &ParseError{Input: p.Buffer, FailurePhase: "stack drain"}
+    return
+  }
+
+  p.Result = p.Stack[0]
+}
+
+unit <- parens / name / div / mul
+parens <- open unit+ close
+
+div <- '/' sp unit {
+  d, err := p.PopUnit()
+  if err != nil {
+    p.Err = err
+    return
+  }
+
+  n, err := p.PopUnit()
+  if err != nil {
+    p.Err = err
+    return
+  }
+
+  p.PushUnit(&DivUnit{N:n, D:d})
+}
+
+mul <- '*' sp unit {
+  last, err := p.PopUnit()
+  if err != nil {
+    p.Err = err
+    return
+  }
+
+  first, err := p.PopUnit()
+  if err != nil {
+    p.Err = err
+    return
+  }
+
+  p.PushUnit(&MulUnit{first,last})
+}
+
+name <- < [[A-Z]]+ > sp { 
+  found, err := p.System.LookupUnit(buffer[begin:end])
+  if err != nil {
+    p.Err = err
+    return
+  }
+
+  p.PushUnit(found)
+}
+
+open <- '(' sp
+close <- ')' sp
+sp <- ( ' ' / '\t' )*
