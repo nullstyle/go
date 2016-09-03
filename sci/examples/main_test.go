@@ -1,7 +1,7 @@
 package examples
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/nullstyle/go/sci"
 	"github.com/nullstyle/go/sci/systems/si"
@@ -14,6 +14,6 @@ func ExampleAdd_LowLevel() {
 	z := &sci.Value{}
 
 	z.Add(x, y)
-	log.Println(z.M)
+	fmt.Print(z.M)
 	// output: 110
 }

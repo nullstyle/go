@@ -5,8 +5,12 @@
 // The core
 package sci
 
-import "github.com/pkg/errors"
-import "regexp"
+import (
+	"regexp"
+	"sync"
+
+	"github.com/pkg/errors"
+)
 
 //go:generate peg -switch -inline unit_parser.peg
 
@@ -30,6 +34,7 @@ var (
 
 // Unit represents any unit of measure
 type Unit interface {
+	PopulateNormalizedUnit(nu *NormalizedUnit, inverted bool)
 }
 
 // BaseUnit represents the a base unit of a given measure against which other
@@ -57,6 +62,16 @@ type MulUnit []Unit
 // unit".  NilUnit is also used to represent inverse units, such as hz (1 / s)
 // when combind using DivUnit.
 type NilUnit struct {
+}
+
+// NormalizedUnit represents the non-aliased form of a unit, expressed
+// completely in terms of base units.  derived units are expanded into base
+// units and then contribute themselves to either the numerator by increasing
+// the count by one, or to the denominator by decreasing the count by one.  This
+// will be a recursive process.
+type NormalizedUnit struct {
+	Components map[*BaseUnit]int
+	mutex      sync.Mutex
 }
 
 // BaseUnitAlreadyDefinedError is an error that occurs when attempting to

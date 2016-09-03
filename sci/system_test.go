@@ -1,9 +1,69 @@
 package sci
 
-import "testing"
-import "github.com/stretchr/testify/assert"
+import (
+	"testing"
 
-func TestParse_Magnitudes(t *testing.T) {
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestNewSystem(t *testing.T) {
+	sys := NewSystem("test")
+	assert.Equal(t, "test", sys.Name)
+	assert.NotNil(t, sys.BaseUnits)
+}
+
+func TestSystem_DefineBaseUnit(t *testing.T) {
+	sys := NewSystem("test")
+	var (
+		meter *BaseUnit
+		err   error
+	)
+
+	t.Run("happy path", func(t *testing.T) {
+		meter, err = sys.DefineBaseUnit("meter", Length)
+		if assert.NoError(t, err) {
+			assert.Equal(t, meter, sys.BaseUnits[Length])
+		}
+	})
+
+	t.Run("redefinition failse", func(t *testing.T) {
+		_, err = sys.DefineBaseUnit("foot", Length)
+		assert.Error(t, err)
+	})
+
+	t.Run("plural definition panics", func(t *testing.T) {
+		assert.Panics(t, func() {
+			sys.DefineBaseUnit("seconds", Length)
+		})
+	})
+}
+
+func TestSystem_DefineUnit(t *testing.T) {
+	sys := NewSystem("test")
+
+	var (
+		inch Unit
+		foot Unit
+		err  error
+	)
+
+	inch, err = sys.DefineBaseUnit("inch", Length)
+	require.NoError(t, err)
+
+	t.Run("happy path", func(t *testing.T) {
+		foot, err = sys.DefineUnit("foot", "12 inches")
+		if assert.NoError(t, err) {
+			assert.Equal(t, foot, sys.units["foot"])
+
+			du := foot.(*DerivedUnit)
+			assert.Equal(t, inch, du.Value.U)
+			assert.Equal(t, "12", du.Value.M)
+		}
+	})
+}
+
+func TestSystem_Parse_Magnitudes(t *testing.T) {
 	sys := testSystem()
 
 	cases := []struct {
@@ -64,9 +124,9 @@ func TestParseUnit(t *testing.T) {
 
 	u, err = sys.ParseUnit("meter*sec")
 	if assert.NoError(t, err) {
-		assert.EqualValues(t, &DivUnit{
-			N: sys.BaseUnits[Length],
-			D: sys.BaseUnits[Time],
+		assert.EqualValues(t, &MulUnit{
+			sys.BaseUnits[Length],
+			sys.BaseUnits[Time],
 		}, u)
 	}
 

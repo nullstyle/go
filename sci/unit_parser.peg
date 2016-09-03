@@ -7,13 +7,26 @@ type UnitParser Peg {
   Stack []Unit
 }
 
-first <- sp unit+ !. { 
+first <- sp  e1 !. { 
   if len(p.Stack) != 1 {
     p.Err = &ParseError{Input: p.Buffer, FailurePhase: "stack drain"}
     return
   }
 
   p.Result = p.Stack[0]
+}
+
+e1 <- inverted_units / units
+
+units <- unit+
+inverted_units <- '/' sp unit+ {
+  d, err := p.PopUnit()
+  if err != nil {
+    p.Err = err
+    return
+  }
+
+  p.PushUnit(&DivUnit{N: Nil, D: d})
 }
 
 unit <- parens / name / div / mul

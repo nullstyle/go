@@ -1,7 +1,6 @@
 package sci
 
 import (
-	"log"
 	"strings"
 
 	"github.com/gedex/inflector"
@@ -29,6 +28,7 @@ func (sys *System) DefineBaseUnit(name string, m Measure) (*BaseUnit, error) {
 	unit := &BaseUnit{
 		Name:    name,
 		Measure: m,
+		system:  sys,
 	}
 
 	err := sys.addUnit(name, unit)
@@ -128,7 +128,6 @@ func (sys *System) Parse(val string) (*Value, error) {
 	if magend < len(val) {
 		unitstr = val[magend:]
 	}
-	log.Println(unitstr)
 
 	unit, err := sys.ParseUnit(unitstr)
 	if err != nil {
@@ -157,12 +156,12 @@ func (sys *System) ParseUnit(unitstr string) (Unit, error) {
 	u.Init()
 	err := u.Parse()
 	if err != nil {
-		return nil, errors.Wrap(err, "unit parse failed")
+		return nil, errors.Wrap(err, "parse failed")
 	}
 
 	u.Execute()
 	if u.Err != nil {
-		return nil, errors.Wrap(err, "unit exec failed")
+		return nil, errors.Wrap(u.Err, "exec failed")
 	}
 
 	return u.Result, nil
