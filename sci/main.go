@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-//go:generate peg -switch -inline unit_parser.peg
+//go:generate bash generate.bash
 
 const (
 	Length Measure = "Length"
