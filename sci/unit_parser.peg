@@ -29,7 +29,15 @@ inverted_units <- '/' sp unit+ {
   p.pushUnit(&DivUnit{N: Nil, D: d})
 }
 
-unit <- parens / name_exp / name / div / mul
+unit <- parens_exp / parens / name_exp / name / div / mul
+
+parens_exp <- open unit+ close '^' < exp > {
+  err := p.pushExpParens(buffer[begin:end])
+  if err != nil {
+    p.Err = err
+    return
+  }
+}
 parens <- open unit+ close
 
 div <- '/' sp unit {
@@ -65,9 +73,6 @@ mul <- '*' sp unit {
 }
 
 name_exp <- < [[A-Z]]+ '^' exp > sp { 
-  p.log("in name_exp:", buffer[begin:end])
-  defer p.log("out name_exp")
-
   err := p.pushExpUnit(buffer[begin:end])
   if err != nil {
     p.Err = err
