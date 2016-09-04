@@ -19,6 +19,13 @@ const (
 	Time   Measure = "Time"
 )
 
+const (
+	// MaxExp represents the largest absolute value that an exponent is allowed to
+	// have within this library.  It's a conservative cap for now, as I (scott) am
+	// not very sure what sort of issues will arise if left higher or unbounded.
+	MaxExp = 4
+)
+
 var Nil = &NilUnit{}
 
 var (
@@ -86,6 +93,12 @@ type BaseUnitAlreadyDefinedError struct {
 // another.
 type Converter interface {
 	Convert(in *Value) (*Value, error)
+}
+
+// ExpToBigError is the error that is returned when a string that is being
+// parsed into a unit has an exponent that is too large.
+type ExpToBigError struct {
+	Exp int64
 }
 
 // MagnitudeError represents the error produces when trying to operate on a

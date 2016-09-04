@@ -4,76 +4,92 @@ type UnitParser Peg {
   System *System
   Result Unit
   Err error
-  Stack []Unit
+  stack []Unit
 }
 
 first <- sp  e1 !. { 
-  if len(p.Stack) != 1 {
+  if len(p.stack) != 1 {
     p.Err = &ParseError{Input: p.Buffer, FailurePhase: "stack drain"}
     return
   }
 
-  p.Result = p.Stack[0]
+  p.Result = p.stack[0]
 }
 
 e1 <- inverted_units / units
 
 units <- unit+
 inverted_units <- '/' sp unit+ {
-  d, err := p.PopUnit()
+  d, err := p.popUnit()
   if err != nil {
     p.Err = err
     return
   }
 
-  p.PushUnit(&DivUnit{N: Nil, D: d})
+  p.pushUnit(&DivUnit{N: Nil, D: d})
 }
 
-unit <- parens / name / div / mul
+unit <- parens / name_exp / name / div / mul
 parens <- open unit+ close
 
 div <- '/' sp unit {
-  d, err := p.PopUnit()
+  d, err := p.popUnit()
   if err != nil {
     p.Err = err
     return
   }
 
-  n, err := p.PopUnit()
+  n, err := p.popUnit()
   if err != nil {
     p.Err = err
     return
   }
 
-  p.PushUnit(&DivUnit{N:n, D:d})
+  p.pushUnit(&DivUnit{N:n, D:d})
 }
 
 mul <- '*' sp unit {
-  last, err := p.PopUnit()
+  last, err := p.popUnit()
   if err != nil {
     p.Err = err
     return
   }
 
-  first, err := p.PopUnit()
+  first, err := p.popUnit()
   if err != nil {
     p.Err = err
     return
   }
 
-  p.PushUnit(&MulUnit{first,last})
+  p.pushUnit(&MulUnit{first,last})
+}
+
+name_exp <- < [[A-Z]]+ '^' exp > sp { 
+  p.log("in name_exp:", buffer[begin:end])
+  defer p.log("out name_exp")
+
+  err := p.pushExpUnit(buffer[begin:end])
+  if err != nil {
+    p.Err = err
+    return
+  }
 }
 
 name <- < [[A-Z]]+ > sp { 
+  p.log("in name:", buffer[begin:end])
+  defer p.log("out name_exp")
   found, err := p.System.LookupUnit(buffer[begin:end])
   if err != nil {
     p.Err = err
     return
   }
 
-  p.PushUnit(found)
+  p.pushUnit(found)
 }
 
+exp <- minus? [1-9][0-9]*
+
+minus <- '-'
 open <- '(' sp
 close <- ')' sp
 sp <- ( ' ' / '\t' )*

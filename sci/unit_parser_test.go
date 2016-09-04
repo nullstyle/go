@@ -65,6 +65,22 @@ func TestUnitParser(t *testing.T) {
 				D: &MulUnit{sys.BaseUnits[Time], sys.BaseUnits[Time]},
 			},
 		},
+		{
+			"exp",
+			"meter / sec^2",
+			&DivUnit{
+				N: sys.BaseUnits[Length],
+				D: &MulUnit{sys.BaseUnits[Time], sys.BaseUnits[Time]},
+			},
+		},
+		{
+			"exp-parens",
+			"(meter / sec)^2",
+			&MulUnit{
+				&DivUnit{N: sys.BaseUnits[Length], D: sys.BaseUnits[Time]},
+				&DivUnit{N: sys.BaseUnits[Length], D: sys.BaseUnits[Time]},
+			},
+		},
 	}
 
 	for _, kase := range cases {
