@@ -15,8 +15,11 @@ import (
 //go:generate peg -switch -inline unit_parser.peg
 
 const (
+	// Length represents the length measure
 	Length Measure = "Length"
-	Time   Measure = "Time"
+
+	// Time represents the time measure
+	Time Measure = "Time"
 )
 
 const (
@@ -26,17 +29,19 @@ const (
 	MaxExp = 4
 )
 
+// Nil is the singleton instance of *NilUnit
 var Nil = &NilUnit{}
-
-var (
-	ErrIncompatibleTypes = errors.New("incompatible types")
-	ErrBlankValue        = errors.New("blank value string")
-)
 
 var (
 	MagnitudeRegexp = regexp.MustCompile(
 		"^((-)?([1-9][0-9]*)(\\.[0-9]+)?)([^0-9]|$)",
 	)
+)
+
+var (
+	// ErrIncompatibleTypes is returned when attempted to perform an operation
+	// (such as addition) on two incompatible types.
+	ErrIncompatibleTypes = errors.New("incompatible types")
 )
 
 // Unit represents any unit of measure
@@ -58,11 +63,13 @@ type DerivedUnit struct {
 	Value *Value
 }
 
+// DivUnit represents a compound unit such as "feet / hour"
 type DivUnit struct {
 	N Unit
 	D Unit
 }
 
+// MulUnit represents a compound unit such as "foot*pound"
 type MulUnit []Unit
 
 // NilUnit represents "no unit".  Values of it represents "a mignitude without a
@@ -109,13 +116,6 @@ type MagnitudeError struct {
 
 // Measure represents a domain of measurement, such as length, time, or mass.
 type Measure string
-
-// ParseError represents the error produces when trying to operate on a
-// value whose magnitude (the M field) is invalid.
-type ParseError struct {
-	Input        string
-	FailurePhase string
-}
 
 // Prefix represents a unit prefix.
 type Prefix struct {
@@ -181,4 +181,5 @@ var _ Unit = &DivUnit{}
 var _ Unit = &MulUnit{}
 
 var _ error = &MagnitudeError{}
-var _ error = &ParseError{}
+var _ error = &ExpToBigError{}
+var _ error = &BaseUnitAlreadyDefinedError{}

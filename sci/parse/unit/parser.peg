@@ -1,0 +1,27 @@
+package unit
+
+type Parser Peg {
+  Result U
+  Err error
+  stack []U
+}
+
+first <- sp  e1 !. { p.finish() }
+e1 <- inverted_units / units
+
+units <- unit+
+inverted_units <- '1'? '/' sp unit+ { p.invertUnit() }
+unit <- parens_exp / parens / ref_exp / ref / div / mul
+parens_exp <- parens '^' < exp > { p.expParens(buffer[begin:end]) }
+parens <- open unit+ close
+
+div <- '/' sp unit { p.div() }
+mul <- '*' sp unit { p.mul() }
+ref_exp <- < [[A-Z]]+ '^' exp > sp { p.expUnit(buffer[begin:end]) }
+ref <- < [[A-Z]]+ > sp {  p.ref(buffer[begin:end]) }
+
+exp <- minus? [1-9][0-9]*
+minus <- '-'
+open <- '(' sp
+close <- ')' sp
+sp <- ( ' ' / '\t' )*

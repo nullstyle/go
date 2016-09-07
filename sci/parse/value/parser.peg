@@ -1,0 +1,23 @@
+package value
+
+type Parser Peg {
+  Result V
+}
+
+first <- sp magnitude sp unit !.
+unit <- < .* > { 
+  p.Result.U = buffer[begin:end]
+}
+magnitude <- < sci / float_exp /  float / int_exp / int > {
+  p.Result.M = buffer[begin:end]
+}
+
+sci <- float 'E' int
+float_exp <- minus? [1-9][0-9]* '.' [0-9]+ '^' exp
+float <- minus? [1-9][0-9]* '.' [0-9]+
+int_exp <- minus? [1-9][0-9]* '^' exp
+int <- minus? [1-9][0-9]*
+
+exp <- minus? [1-9][0-9]*
+minus <- '-'
+sp <- ( ' ' / '\t' )*

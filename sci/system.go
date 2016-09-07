@@ -1,9 +1,8 @@
 package sci
 
 import (
-	"strings"
-
 	"github.com/gedex/inflector"
+	"github.com/nullstyle/go/sci/parse"
 	"github.com/pkg/errors"
 )
 
@@ -105,66 +104,34 @@ func (sys *System) MustParse(val string) *Value {
 // Parse parses a single value using the units defined (i.e. previously added to
 // the system using Add()) in sys.
 func (sys *System) Parse(val string) (*Value, error) {
-	stripped := strings.TrimSpace(val)
-
-	if stripped == "" {
-		return nil, ErrBlankValue
+	v, err := parse.Value(val)
+	if err != nil {
+		return nil, errors.Wrap(err, "parse value")
 	}
 
-	matches := MagnitudeRegexp.FindStringSubmatchIndex(val)
-	if matches == nil {
-		return nil, &ParseError{Input: val, FailurePhase: "extract magnitude"}
-	}
-
-	// the first submatch of the match is the whole magnitude (in indexes 2 and 3
-	// according to package regexp rules)
-	magstart, magend := matches[2], matches[3]
-
-	magnitude := val[magstart:magend]
-	unitstr := ""
-
-	// if the magnitude match does not consume the whole input, everything past
-	// the match is to be considered the unit of the value.
-	if magend < len(val) {
-		unitstr = val[magend:]
-	}
-
-	unit, err := sys.ParseUnit(unitstr)
+	u, err := sys.ParseUnit(v.U)
 	if err != nil {
 		return nil, errors.Wrap(err, "parse unit")
 	}
 
-	return &Value{M: magnitude, U: unit}, nil
+	return &Value{M: v.M, U: u}, nil
 }
 
 // ParseUnit converts the provided string into a Unit value, looking up defined
 // units as necessary and forming new algebraic units as specified.
 func (sys *System) ParseUnit(unitstr string) (Unit, error) {
-	unitstr = strings.TrimSpace(unitstr)
-	if unitstr == "" {
-		return Nil, nil
-	}
-
-	//TODO: support prefixes
-
-	u := UnitParser{
-		Buffer: unitstr,
-		System: sys,
-		Result: Nil,
-	}
-
-	u.Init()
-	err := u.Parse()
+	ast, err := parse.Unit(unitstr)
 	if err != nil {
 		return nil, errors.Wrap(err, "parse failed")
 	}
 
-	u.Execute()
-	if u.Err != nil {
-		return nil, errors.Wrap(u.Err, "exec failed")
+	eu := &evalUnit{System: sys}
+	u, err := eu.eval(ast)
+	if err != nil {
+		return nil, errors.Wrap(err, "eval failed")
 	}
 
-	return u.Result, nil
+	return u, nil
 }
 
 // addUnit records the provided unit at the given name, providing it wouldn't

@@ -1,8 +1,8 @@
-package sci
+package unit
 
 import "fmt"
 
 // Error implements the error interface
 func (perr *ParseError) Error() string {
-	return fmt.Sprintf("parse value: %s failed", perr.FailurePhase)
+	return fmt.Sprintf("parse unit: %s failed", perr.FailurePhase)
 }
