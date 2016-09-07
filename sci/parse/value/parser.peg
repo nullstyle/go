@@ -13,11 +13,14 @@ magnitude <- < sci / float_exp /  float / int_exp / int > {
 }
 
 sci <- float 'E' int
-float_exp <- minus? [1-9][0-9]* '.' [0-9]+ '^' exp
-float <- minus? [1-9][0-9]* '.' [0-9]+
-int_exp <- minus? [1-9][0-9]* '^' exp
-int <- minus? [1-9][0-9]*
+float_exp <- float '^' exp
+float <-  minus? (zero / not_zero) '.' [0-9]+
+int_exp <- int '^' exp
+int <-  zero / (minus? not_zero)
 
-exp <- minus? [1-9][0-9]*
+
+exp <- minus? not_zero
+zero <- '0'
+not_zero <- [1-9][0-9]*
 minus <- '-'
 sp <- ( ' ' / '\t' )*

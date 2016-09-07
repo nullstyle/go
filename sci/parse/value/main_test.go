@@ -42,6 +42,16 @@ func TestParse(t *testing.T) {
 			"9.0123 (meter / second^2)",
 			V{M: "9.0123", U: "(meter / second^2)"},
 		},
+		{
+			"leading-zero",
+			"0.304 meter",
+			V{M: "0.304", U: "meter"},
+		},
+		{
+			"-leading-zero",
+			"-0.304 meter",
+			V{M: "-0.304", U: "meter"},
+		},
 	}
 
 	for _, kase := range cases {
