@@ -29,15 +29,6 @@ const (
 	MaxExp = 4
 )
 
-// Nil is the singleton instance of *NilUnit
-var Nil = &NilUnit{}
-
-var (
-	MagnitudeRegexp = regexp.MustCompile(
-		"^((-)?([1-9][0-9]*)(\\.[0-9]+)?)([^0-9]|$)",
-	)
-)
-
 var (
 	// ErrIncompatibleTypes is returned when attempted to perform an operation
 	// (such as addition) on two incompatible types.
@@ -46,6 +37,7 @@ var (
 
 // Unit represents any unit of measure
 type Unit interface {
+	System() *System
 	PopulateNormalizedUnit(nu *NormalizedUnit, inverted bool)
 }
 
@@ -76,6 +68,7 @@ type MulUnit []Unit
 // unit".  NilUnit is also used to represent inverse units, such as hz (1 / s)
 // when combind using DivUnit.
 type NilUnit struct {
+	system *System
 }
 
 // NormalizedUnit represents the non-aliased form of a unit, expressed
@@ -150,6 +143,7 @@ type System struct {
 	// units represents all of the units defined in this system, base units
 	// included.
 	units map[string]Unit
+	nilu  *NilUnit
 }
 
 // Value represents a value. Examples include "3 mm" or "10 m/s"
@@ -169,6 +163,7 @@ func NewSystem(name string) *System {
 	ret.Name = name
 	ret.BaseUnits = make(map[Measure]*BaseUnit)
 	ret.units = make(map[string]Unit)
+	ret.nilu = &NilUnit{system: &ret}
 
 	return &ret
 }

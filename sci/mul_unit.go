@@ -6,3 +6,8 @@ func (u *MulUnit) PopulateNormalizedUnit(nu *NormalizedUnit, inv bool) {
 		mu.PopulateNormalizedUnit(nu, inv)
 	}
 }
+
+// System implements Unit
+func (u *MulUnit) System() *System {
+	return (*u)[0].System()
+}

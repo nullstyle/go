@@ -8,3 +8,8 @@ func (bu *BaseUnit) PopulateNormalizedUnit(nu *NormalizedUnit, inverted bool) {
 		nu.Add(bu, 1)
 	}
 }
+
+// System implements Unit
+func (bu *BaseUnit) System() *System {
+	return bu.system
+}

@@ -101,7 +101,7 @@ func TestParseUnit(t *testing.T) {
 
 	u, err := sys.ParseUnit("")
 	if assert.NoError(t, err) {
-		assert.Equal(t, Nil, u)
+		assert.Equal(t, sys.Nil(), u)
 	}
 
 	u, err = sys.ParseUnit("meter")
@@ -111,7 +111,7 @@ func TestParseUnit(t *testing.T) {
 
 	u, err = sys.ParseUnit("/sec")
 	if assert.NoError(t, err) {
-		assert.EqualValues(t, &DivUnit{N: Nil, D: sys.BaseUnits[Time]}, u)
+		assert.EqualValues(t, &DivUnit{N: sys.Nil(), D: sys.BaseUnits[Time]}, u)
 	}
 
 	u, err = sys.ParseUnit("meter/sec")

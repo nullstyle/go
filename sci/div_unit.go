@@ -8,3 +8,8 @@ func (u *DivUnit) PopulateNormalizedUnit(nu *NormalizedUnit, inv bool) {
 	u.N.PopulateNormalizedUnit(nu, ninv)
 	u.D.PopulateNormalizedUnit(nu, dinv)
 }
+
+// System implements Unit
+func (u *DivUnit) System() *System {
+	return u.N.System()
+}

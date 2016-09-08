@@ -101,6 +101,10 @@ func (sys *System) MustParse(val string) *Value {
 	return v
 }
 
+func (sys *System) Nil() *NilUnit {
+	return sys.nilu
+}
+
 // Parse parses a single value using the units defined (i.e. previously added to
 // the system using Add()) in sys.
 func (sys *System) Parse(val string) (*Value, error) {

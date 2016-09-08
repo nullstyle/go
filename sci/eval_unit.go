@@ -43,7 +43,7 @@ func (eu *evalUnit) push(u Unit) {
 func (eu *evalUnit) visit(cur unit.U) error {
 	switch cur := cur.(type) {
 	case *unit.Nil:
-		eu.push(Nil)
+		eu.push(eu.System.Nil())
 	case *unit.Ref:
 		found, err := eu.System.LookupUnit(cur.Name)
 		if err != nil {
@@ -72,7 +72,7 @@ func (eu *evalUnit) visit(cur unit.U) error {
 
 		var ret Unit
 		if cur.Exp < 0 {
-			ret = &DivUnit{N: Nil, D: &mul}
+			ret = &DivUnit{N: eu.System.Nil(), D: &mul}
 		} else {
 			ret = &mul
 		}
