@@ -9,6 +9,11 @@ func (u *DivUnit) PopulateNormalizedUnit(nu *NormalizedUnit, inv bool) {
 	u.D.PopulateNormalizedUnit(nu, dinv)
 }
 
+// String implements fmt.Stringer
+func (u *DivUnit) String() string {
+	return u.System().getUnitName(u)
+}
+
 // System implements Unit
 func (u *DivUnit) System() *System {
 	return u.N.System()

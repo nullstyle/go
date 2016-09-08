@@ -153,3 +153,13 @@ func (sys *System) addUnit(name string, unit Unit) error {
 
 	return nil
 }
+func (sys *System) getUnitName(u Unit) string {
+	// TODO: get better than O(n)
+	for name, su := range sys.units {
+		if su == u {
+			return name
+		}
+	}
+
+	panic("provided unit not in system")
+}

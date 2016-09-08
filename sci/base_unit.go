@@ -9,6 +9,11 @@ func (bu *BaseUnit) PopulateNormalizedUnit(nu *NormalizedUnit, inverted bool) {
 	}
 }
 
+// String implements fmt.Stringer
+func (bu *BaseUnit) String() string {
+	return bu.Name
+}
+
 // System implements Unit
 func (bu *BaseUnit) System() *System {
 	return bu.system

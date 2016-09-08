@@ -6,7 +6,6 @@
 package sci
 
 import (
-	"regexp"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -37,6 +36,7 @@ var (
 
 // Unit represents any unit of measure
 type Unit interface {
+	fmt.Stringer
 	System() *System
 	PopulateNormalizedUnit(nu *NormalizedUnit, inverted bool)
 }
@@ -167,14 +167,3 @@ func NewSystem(name string) *System {
 
 	return &ret
 }
-
-// Interface conformity confirmations
-var _ Unit = &BaseUnit{}
-var _ Unit = &DerivedUnit{}
-var _ Unit = &NilUnit{}
-var _ Unit = &DivUnit{}
-var _ Unit = &MulUnit{}
-
-var _ error = &MagnitudeError{}
-var _ error = &ExpToBigError{}
-var _ error = &BaseUnitAlreadyDefinedError{}
