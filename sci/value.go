@@ -1,7 +1,10 @@
 package sci
 
 import (
+	"fmt"
 	"math/big"
+
+	"github.com/pkg/errors"
 )
 
 // Add adds `l` and `r` together and stores the result in `v`, providing that
@@ -30,6 +33,29 @@ func (v *Value) Add(l, r *Value) error {
 	return nil
 }
 
+// Convert takes the source value, converts it to the target unit and sets the
+// result on the method receiver
+func (v *Value) Convert(source *Value, target Unit) error {
+	sys := source.U.System()
+	sc, err := sys.getConverter(source.U)
+	if err != nil {
+		return errors.Wrap(err, "failed to get source converter")
+	}
+
+	tc, err := sys.getConverter(target)
+	if err != nil {
+		return errors.Wrap(err, "failed to get target converter")
+	}
+
+	nm := sc.ToBase(source.M)
+
+	var result Value
+	result.U = target
+	result.M = tc.FromBase(nm)
+	*v = result
+	return nil
+}
+
 // Div divides `l` and `r` together and stores the result in `v`.
 func (v *Value) Div(l, r *Value) error {
 	return nil
@@ -43,4 +69,18 @@ func (v *Value) Eq(other *Value) bool {
 // Mul multiplies `l` and `r` together and stores the result in `v`.
 func (v *Value) Mul(l, r *Value) error {
 	return nil
+}
+
+// String implements fmt.Stringer
+func (v *Value) String() string {
+  var (
+    one big.Float
+    m big.Float
+  )
+
+  
+  
+
+
+	return fmt.Sprintf("%s %s", v.M, v.U)
 }

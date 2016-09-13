@@ -7,11 +7,9 @@ import (
 )
 
 func TestNormalizedUnit_Add(t *testing.T) {
-	sys := testSystem()
 	var nu NormalizedUnit
 
-	l := sys.BaseUnits[Length]
-	nu.Add(l, 2)
+	nu.Add(Length, 2)
 
-	assert.Equal(t, 2, nu.Components[l])
+	assert.Equal(t, 2, nu.Components[Length])
 }

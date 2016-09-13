@@ -1,6 +1,8 @@
 package sci
 
 import (
+	"log"
+
 	"github.com/gedex/inflector"
 	"github.com/nullstyle/go/sci/parse"
 	"github.com/pkg/errors"
@@ -117,6 +119,7 @@ func (sys *System) Parse(val string) (*Value, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "parse unit")
 	}
+	log.Println("u:", u, err)
 
 	return &Value{M: v.M, U: u}, nil
 }
@@ -153,6 +156,50 @@ func (sys *System) addUnit(name string, unit Unit) error {
 
 	return nil
 }
+
+// getConverter looks up a converter for u that can be used to convert a value
+// of `u` to the base units of the system.
+func (sys *System) getConverter(u Unit) (*converter, error) {
+
+	sys.convlock.RLock()
+	found, ok := sys.convs[u]
+	sys.convlock.RUnlock()
+
+	if ok {
+		return found, nil
+	}
+
+	var newc converter
+
+	// we didn't find a converter, so create one
+	switch u := u.(type) {
+	case *BaseUnit:
+		_, ok := newc.factor.SetString("1.0")
+		if !ok {
+			panic("Couldn't set 1.0 on a float!")
+		}
+	case *DerivedUnit:
+		dc, err := sys.getConverter(u.Value.U)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get child converter")
+		}
+		_, ok := newc.factor.SetString(u.Value.M)
+		if !ok {
+			return nil, &MagnitudeError{M: u.Value.M}
+		}
+
+		newc.factor.Mul(&newc.factor, &dc.factor)
+	default:
+		panic("unexpected unit type")
+	}
+
+	sys.convlock.Lock()
+	sys.convs[u] = &newc
+	sys.convlock.Unlock()
+
+	return &newc, nil
+}
+
 func (sys *System) getUnitName(u Unit) string {
 	// TODO: get better than O(n)
 	for name, su := range sys.units {
@@ -160,6 +207,8 @@ func (sys *System) getUnitName(u Unit) string {
 			return name
 		}
 	}
+
+	//TODO: no name was found, construct one from the units children
 
 	panic("provided unit not in system")
 }

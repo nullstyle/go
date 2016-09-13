@@ -13,9 +13,9 @@ func TestDerivedUnit_PopulateNormalizedUnit(t *testing.T) {
 	l := sys.BaseUnits[Length]
 
 	l.PopulateNormalizedUnit(&nu, false)
-	assert.Equal(t, 1, nu.Components[l])
+	assert.Equal(t, 1, nu.Components[Length])
 	l.PopulateNormalizedUnit(&nu, true)
-	assert.Equal(t, 0, nu.Components[l])
+	assert.Equal(t, 0, nu.Components[Length])
 	l.PopulateNormalizedUnit(&nu, true)
-	assert.Equal(t, -1, nu.Components[l])
+	assert.Equal(t, -1, nu.Components[Length])
 }

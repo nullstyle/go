@@ -6,6 +6,7 @@
 package sci
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -15,10 +16,13 @@ import (
 
 const (
 	// Length represents the length measure
-	Length Measure = "Length"
+	Length Measure = iota
 
 	// Time represents the time measure
-	Time Measure = "Time"
+	Time
+
+	// MeasureCount is the total number of measures defined in this package
+	MeasureCount
 )
 
 const (
@@ -77,7 +81,8 @@ type NilUnit struct {
 // the count by one, or to the denominator by decreasing the count by one.  This
 // will be a recursive process.
 type NormalizedUnit struct {
-	Components map[*BaseUnit]int
+	System     *System
+	Components [MeasureCount]int
 	mutex      sync.Mutex
 }
 
@@ -87,12 +92,6 @@ type NormalizedUnit struct {
 // any value belonging to a given measure in relation to a single base unit.
 type BaseUnitAlreadyDefinedError struct {
 	Existing *BaseUnit
-}
-
-// Converter represents a type that can convert a value of one unit into
-// another.
-type Converter interface {
-	Convert(in *Value) (*Value, error)
 }
 
 // ExpToBigError is the error that is returned when a string that is being
@@ -108,7 +107,7 @@ type MagnitudeError struct {
 }
 
 // Measure represents a domain of measurement, such as length, time, or mass.
-type Measure string
+type Measure int
 
 // Prefix represents a unit prefix.
 type Prefix struct {
@@ -144,6 +143,9 @@ type System struct {
 	// included.
 	units map[string]Unit
 	nilu  *NilUnit
+
+	convlock sync.RWMutex
+	convs    map[Unit]*converter
 }
 
 // Value represents a value. Examples include "3 mm" or "10 m/s"
@@ -164,6 +166,7 @@ func NewSystem(name string) *System {
 	ret.BaseUnits = make(map[Measure]*BaseUnit)
 	ret.units = make(map[string]Unit)
 	ret.nilu = &NilUnit{system: &ret}
+	ret.convs = make(map[Unit]*converter)
 
 	return &ret
 }
