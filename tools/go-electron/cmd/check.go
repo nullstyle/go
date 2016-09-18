@@ -3,6 +3,7 @@ package cmd
 import (
 	"log"
 
+	"github.com/nullstyle/go/gopath"
 	"github.com/spf13/cobra"
 )
 
@@ -16,6 +17,12 @@ var checkCmd = &cobra.Command{
 		ensureExecutable("electron")
 		ensureExecutable("electron-packager")
 		ensureExecutable("gopherjs")
+
+		if gopath.IsCurrentSingular() {
+			log.Println("[good] GOPATH is singular")
+		} else {
+			log.Fatalln("GOPATH contains multiple folders")
+		}
 	},
 }
 
@@ -42,5 +49,5 @@ func ensureExecutable(name string) {
 		log.Printf("`%s` MISSING", name)
 		log.Fatal(err)
 	}
-	log.Printf("`%s` found", name)
+	log.Printf("[good] `%s` found", name)
 }
