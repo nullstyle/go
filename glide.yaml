@@ -4,3 +4,4 @@ import:
 - package: github.com/gedex/inflector
 - package: github.com/spf13/cobra
 - package: github.com/spf13/viper
+- package: github.com/spf13/afero

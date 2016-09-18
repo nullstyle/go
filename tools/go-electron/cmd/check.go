@@ -3,6 +3,7 @@ package cmd
 import (
 	"log"
 
+	"github.com/nullstyle/go/envcheck"
 	"github.com/nullstyle/go/gopath"
 	"github.com/spf13/cobra"
 )
@@ -44,7 +45,7 @@ func init() {
 // ensureExecutable exits the application with a failure if an application with
 // the name provided is not in the local environment's PATH.
 func ensureExecutable(name string) {
-	_, err := which(name)
+	_, err := envcheck.Executable(name)
 	if err != nil {
 		log.Printf("`%s` MISSING", name)
 		log.Fatal(err)
