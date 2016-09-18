@@ -1,8 +1,9 @@
 package cmd
 
 import (
-	"fmt"
+	"log"
 
+	"github.com/nullstyle/go/gopherjs"
 	"github.com/spf13/cobra"
 )
 
@@ -12,8 +13,10 @@ var buildCmd = &cobra.Command{
 	Short: "Build the go-electron app at PATH",
 	Long:  `TODO`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
-		fmt.Println("build called")
+		err := gopherjs.Build(args[0])
+		if err != nil {
+			log.Fatal(err)
+		}
 	},
 }
 
