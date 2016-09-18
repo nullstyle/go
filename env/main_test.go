@@ -1,9 +1,9 @@
-package envcheck
+package env
 
 import (
 	"testing"
 
-	"github.com/nullstyle/go/envcheck/mocks"
+	"github.com/nullstyle/go/env/mocks"
 	"github.com/nullstyle/go/test"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"

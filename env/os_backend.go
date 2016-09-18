@@ -1,4 +1,4 @@
-package envcheck
+package env
 
 import (
 	"os"

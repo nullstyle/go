@@ -1,6 +1,6 @@
-// Package envcheck implements functions that make assertions on the state of
+// package env implements functions that make assertions on the state of
 // the local execution environment.
-package envcheck
+package env
 
 import (
 	"os"
