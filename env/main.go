@@ -136,3 +136,20 @@ func PkgPath(pkg string) (string, error) {
 
 	return path, nil
 }
+
+// RealPath resolves path against the current FS implementation, returning the
+// actual local filesystem path if possible.  Useful for calling out to external
+// commands that requires paths while still being able to override FS in tests.
+func RealPath(path string) (string, error) {
+	bp, ok := FS.(*afero.BasePathFs)
+	if !ok {
+		return path, nil
+	}
+
+	real, err := bp.RealPath(path)
+	if err != nil {
+		return "", errors.Wrap(err, "real path failed")
+	}
+
+	return real, nil
+}

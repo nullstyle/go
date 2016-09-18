@@ -3,9 +3,12 @@ package env
 import (
 	"testing"
 
+	"strings"
+
 	"github.com/nullstyle/go/env/mocks"
 	"github.com/nullstyle/go/test"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -126,5 +129,25 @@ func TestPkgPath(t *testing.T) {
 	path, err = PkgPath("pkg3")
 	if assert.NoError(t, err) {
 		assert.Equal(t, "/go1/src/pkg3", path)
+	}
+}
+
+func TestRealPath(t *testing.T) {
+	fs, done := test.FS(t, "envcheck")
+	defer done()
+
+	// happy path: local fs
+	FS = afero.NewOsFs()
+
+	real, err := RealPath("/bin")
+	if assert.NoError(t, err) {
+		assert.Equal(t, "/bin", real)
+	}
+
+	// happy path: test fs
+	FS = fs
+	real, err = RealPath("/bin")
+	if assert.NoError(t, err) {
+		assert.True(t, strings.HasSuffix(real, "/bin"), "real path doesn't end with /bin")
 	}
 }
