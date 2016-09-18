@@ -4,6 +4,8 @@ import (
 	"log"
 
 	"github.com/nullstyle/go/electron/build"
+	"github.com/nullstyle/go/gopherjs"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -14,7 +16,12 @@ var buildCmd = &cobra.Command{
 	Long:  `TODO`,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := build.Run(args[0], "all", "all")
-		if err != nil {
+		switch err := errors.Cause(err).(type) {
+		case nil:
+			// noop
+		case *gopherjs.BuildError:
+			log.Fatalf("gopherjs build error: %s", err.ExitErr.Stderr)
+		default:
 			log.Fatal(err)
 		}
 	},
