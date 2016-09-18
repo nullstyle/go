@@ -20,7 +20,12 @@ func Build(pkg string, outPath string) error {
 		return errors.Wrap(err, "env/PkgExists failed")
 	}
 
-	cmd := exec.Command("gopherjs", "build", pkg, "-o", outPath)
+	realPath, err := env.RealPath(outPath)
+	if err != nil {
+		return errors.Wrap(err, "env/RealPath failed")
+	}
+
+	cmd := exec.Command("gopherjs", "build", pkg, "-o", realPath)
 
 	raw, err := cmd.Output()
 	if err != nil {
