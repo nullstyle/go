@@ -30,8 +30,8 @@ func Run(pkg string, os string, arch string) error {
 		return errors.Wrap(err, "failed to make build dir")
 	}
 
-	// build gopher.js
-	outPath := filepath.Join(outDir, "gopher.js")
+	// build gopherjs
+	outPath := filepath.Join(outDir, "main.js")
 	err = gopherjs.Build(pkg, outPath)
 	if err != nil {
 		return errors.Wrap(err, "compile js failed")

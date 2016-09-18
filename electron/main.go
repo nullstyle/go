@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-
 	"runtime"
 
 	"github.com/gopherjs/gopherjs/js"
@@ -24,6 +23,7 @@ type App struct {
 	Version      string
 	WindowWidth  int
 	WindowHeight int
+	OnReady      func(*App)
 }
 
 // On registers fn to be called whenever the global event provided is triggered.
@@ -61,6 +61,10 @@ func Start(app *App) {
 
 	On("ready", func() {
 		win = createWindow(app.WindowWidth, app.WindowHeight)
+
+		if app.OnReady != nil {
+			app.OnReady(app)
+		}
 	})
 
 	On("window-all-closed", func() {
