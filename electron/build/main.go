@@ -38,7 +38,7 @@ func Run(pkg string, os string, arch string) error {
 	}
 
 	// copy application skeleton
-	err = copyAsset("skel/index.html", outDir)
+	err = copyAssetDir("skel", outDir)
 	if err != nil {
 		return errors.Wrap(err, "copy skell failed")
 	}
@@ -53,23 +53,13 @@ func Run(pkg string, os string, arch string) error {
 
 func copyAsset(asset string, outDir string) error {
 	fi, err := AssetInfo(asset)
+	if err != nil {
+		return errors.Wrap(err, "AssetInfo failed")
+	}
 
 	// copy children if current asset is a directory
 	if fi.IsDir() {
-		children, err := AssetDir(asset)
-		if err != nil {
-			return errors.Wrap(err, "AssetDir failed")
-		}
-
-		for _, child := range children {
-			childPath := filepath.Join(asset, child)
-			err = copyAsset(childPath, outDir)
-			if err != nil {
-				return errors.Wrap(err, "failed copying child")
-			}
-		}
-
-		return nil
+		return copyAssetDir(asset, outDir)
 	}
 
 	// otherwise copy the file
@@ -92,6 +82,23 @@ func copyAsset(asset string, outDir string) error {
 	err = afero.WriteFile(env.FS, outPath, raw, fi.Mode())
 	if err != nil {
 		return errors.Wrap(err, "failed writing asset")
+	}
+
+	return nil
+}
+
+func copyAssetDir(dir string, outDir string) error {
+	children, err := AssetDir(dir)
+	if err != nil {
+		return errors.Wrap(err, "AssetDir failed")
+	}
+
+	for _, child := range children {
+		childPath := filepath.Join(dir, child)
+		err = copyAsset(childPath, outDir)
+		if err != nil {
+			return errors.Wrap(err, "failed copying child")
+		}
 	}
 
 	return nil
