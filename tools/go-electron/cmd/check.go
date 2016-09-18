@@ -14,6 +14,7 @@ var checkCmd = &cobra.Command{
 	Long: `check ensures that the dependencies for go-electron
   are available in the local environment.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		ensureExecutable("go")
 		ensureExecutable("electron")
 		ensureExecutable("electron-packager")
 		ensureExecutable("gopherjs")
