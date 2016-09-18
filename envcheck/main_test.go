@@ -1,11 +1,11 @@
 package envcheck
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/nullstyle/go/envcheck/mocks"
 	"github.com/nullstyle/go/test"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -39,4 +39,92 @@ func TestExecutable(t *testing.T) {
 	assert.EqualError(t, err, "error not executable")
 
 	be.AssertExpectations(t)
+}
+
+func TestIsPkgNotFound(t *testing.T) {
+	cases := []struct {
+		Name     string
+		Err      error
+		Expected bool
+	}{
+		{"happy: bare", &PkgNotFoundError{"foo"}, true},
+		{"happy: wrapped", errors.Wrap(&PkgNotFoundError{"foo"}, "once"), true},
+		{
+			"happy: wrapped-twice",
+			errors.Wrap(errors.Wrap(&PkgNotFoundError{"foo"}, "once"), "twiice"),
+			true,
+		},
+		{"sad: nil", nil, false},
+		{"sad: other", errors.New("foo"), false},
+	}
+
+	for _, kase := range cases {
+		t.Run(kase.Name, func(t *testing.T) {
+			ret := IsPkgNotFound(kase.Err)
+			assert.Equal(t, kase.Expected, ret)
+		})
+	}
+
+}
+
+func TestPkgExists(t *testing.T) {
+	fs, done := test.FS(t, "envcheck")
+	defer done()
+	be := &mocks.Backend{}
+	DefaultPathLooker = be
+	DefaultEnvGetter = be
+	DefaultFS = fs
+
+	test.WriteFile(t, fs, "/go1/src/pkg1/main.go", "", 0644)
+	test.WriteFile(t, fs, "/go2/src/pkg2/main.go", "", 0644)
+
+	be.On("Getenv", "GOPATH").Return("/go1:/go2")
+
+	// happy path: in first entry
+	path, err := PkgExists("pkg1")
+	if assert.NoError(t, err) {
+		assert.Equal(t, "/go1/src/pkg1", path)
+	}
+	// happy path: in second entry
+	path, err = PkgExists("pkg2")
+	if assert.NoError(t, err) {
+		assert.Equal(t, "/go2/src/pkg2", path)
+	}
+
+	// sad path: doesn't exist
+	_, err = PkgExists("missing")
+	assert.Error(t, err)
+
+	be.AssertExpectations(t)
+}
+
+func TestPkgPath(t *testing.T) {
+	fs, done := test.FS(t, "envcheck")
+	defer done()
+	be := &mocks.Backend{}
+	DefaultPathLooker = be
+	DefaultEnvGetter = be
+	DefaultFS = fs
+
+	test.WriteFile(t, fs, "/go1/src/pkg1/main.go", "", 0644)
+	test.WriteFile(t, fs, "/go2/src/pkg2/main.go", "", 0644)
+
+	be.On("Getenv", "GOPATH").Return("/go1:/go2")
+
+	// happy path: in first entry
+	path, err := PkgPath("pkg1")
+	if assert.NoError(t, err) {
+		assert.Equal(t, "/go1/src/pkg1", path)
+	}
+	// happy path: in second entry
+	path, err = PkgPath("pkg2")
+	if assert.NoError(t, err) {
+		assert.Equal(t, "/go2/src/pkg2", path)
+	}
+
+	// happy path: new pkg
+	path, err = PkgPath("pkg3")
+	if assert.NoError(t, err) {
+		assert.Equal(t, "/go1/src/pkg3", path)
+	}
 }

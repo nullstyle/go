@@ -7,6 +7,20 @@ type Backend struct {
 	mock.Mock
 }
 
+// Getenv provides a mock function with given fields: _a0
+func (_m *Backend) Getenv(_a0 string) string {
+	ret := _m.Called(_a0)
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(string) string); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
+}
+
 // LookupPath provides a mock function with given fields: program
 func (_m *Backend) LookupPath(program string) (string, error) {
 	ret := _m.Called(program)

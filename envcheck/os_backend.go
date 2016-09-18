@@ -1,6 +1,7 @@
 package envcheck
 
 import (
+	"os"
 	"os/exec"
 
 	"github.com/pkg/errors"
@@ -14,6 +15,10 @@ func (be *osBackend) LookupPath(pogram string) (string, error) {
 	}
 
 	return path, nil
+}
+
+func (be *osBackend) Getenv(key string) string {
+	return os.Getenv(key)
 }
 
 var _ PathLooker = &osBackend{}

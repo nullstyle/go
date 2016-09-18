@@ -3,11 +3,18 @@
 package envcheck
 
 import (
+	"os"
+	"path/filepath"
+
+	"github.com/nullstyle/go/gopath"
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 )
 
 //go:generate mockery -name Backend
+
+// DefaultEnvGetter looks up environment variables from the local system
+var DefaultEnvGetter = OS
 
 // DefaultPathLooker looks up paths using the golang stdlib
 var DefaultPathLooker = OS
@@ -21,6 +28,12 @@ var OS Backend = &osBackend{}
 // Backend is a backend
 type Backend interface {
 	PathLooker
+	EnvGetter
+}
+
+// EnvGetter represents a type that can lookup an environment variable
+type EnvGetter interface {
+	Getenv(string) string
 }
 
 // PathLooker represents a type that can look paths up from the local execution
@@ -30,6 +43,12 @@ type PathLooker interface {
 	// LookupPath searches the local environment for program, returning the
 	// absolute path for the program.
 	LookupPath(program string) (string, error)
+}
+
+// PkgNotFoundError is the error returns when a package cannot be found in the
+// GOPATH.
+type PkgNotFoundError struct {
+	Pkg string
 }
 
 // Executable asserts that program is present and executable on the local
@@ -47,6 +66,53 @@ func Executable(program string) (string, error) {
 
 	if (file.Mode() & 0111) == 0 {
 		return "", errors.New("error not executable")
+	}
+
+	return path, nil
+}
+
+// IsPkgNotFound returns true if err's cause is of type PkgNotFoundError
+func IsPkgNotFound(err error) bool {
+	_, ok := errors.Cause(err).(*PkgNotFoundError)
+	return ok
+}
+
+// PkgExists returns the absolute path of pkg and ensures that the package
+// is present on the local file system underneath GOPATH.
+func PkgExists(pkg string) (string, error) {
+	gpath := DefaultEnvGetter.Getenv("GOPATH")
+	paths := gopath.Split(gpath)
+
+	// search each path in order for the package
+	for _, path := range paths {
+		full := filepath.Join(path, "src", pkg)
+
+		_, err := DefaultFS.Stat(full)
+		if os.IsNotExist(err) {
+			continue
+		}
+
+		if err != nil {
+			return "", errors.Wrap(err, "stat failed")
+		}
+
+		return full, nil
+	}
+
+	return "", &PkgNotFoundError{pkg}
+}
+
+// PkgPath returns the absolute path of pkg and ensures that the package
+// is present on the local file system underneath GOPATH.
+func PkgPath(pkg string) (string, error) {
+	path, err := PkgExists(pkg)
+	if IsPkgNotFound(err) {
+		gpath := DefaultEnvGetter.Getenv("GOPATH")
+		return filepath.Join(gopath.First(gpath), "src", pkg), nil
+	}
+
+	if err != nil {
+		return "", errors.Wrap(err, "envcheck/PkgExists failed")
 	}
 
 	return path, nil

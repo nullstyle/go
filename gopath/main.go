@@ -1,22 +1,27 @@
 // Package gopath implements functions for working with a GOPATH value
 package gopath
 
-import (
-	"os"
-	"strings"
-)
+import "strings"
 
-// Current returns the current gopath
-func Current() string {
-	return os.Getenv("GOPATH")
-}
+// Sep is the GOPATH element separator
+const Sep = ":"
 
-// IsCurrentSingular returns true if current gopath is a single path
-func IsCurrentSingular() bool {
-	return IsSingular(Current())
+// First returns the first GOPATH component
+func First(gpath string) string {
+	parts := Split(gpath)
+	if len(parts) == 0 {
+		return ""
+	}
+
+	return parts[0]
 }
 
 // IsSingular returns true if the provided path represents a single path
 func IsSingular(path string) bool {
 	return !strings.Contains(path, ":")
+}
+
+// Split returns the components of a GOPATH value
+func Split(gpath string) []string {
+	return strings.Split(gpath, Sep)
 }
