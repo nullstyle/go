@@ -16,7 +16,7 @@ func TestExecutable(t *testing.T) {
 	be := &mocks.Backend{}
 
 	DefaultPathLooker = be
-	DefaultFS = fs
+	FS = fs
 
 	test.WriteFile(t, fs, "/bin/found", "", 0755)
 	test.WriteFile(t, fs, "/bin/non-executable", "", 0644)
@@ -73,7 +73,7 @@ func TestPkgExists(t *testing.T) {
 	be := &mocks.Backend{}
 	DefaultPathLooker = be
 	DefaultEnvGetter = be
-	DefaultFS = fs
+	FS = fs
 
 	test.WriteFile(t, fs, "/go1/src/pkg1/main.go", "", 0644)
 	test.WriteFile(t, fs, "/go2/src/pkg2/main.go", "", 0644)
@@ -104,7 +104,7 @@ func TestPkgPath(t *testing.T) {
 	be := &mocks.Backend{}
 	DefaultPathLooker = be
 	DefaultEnvGetter = be
-	DefaultFS = fs
+	FS = fs
 
 	test.WriteFile(t, fs, "/go1/src/pkg1/main.go", "", 0644)
 	test.WriteFile(t, fs, "/go2/src/pkg2/main.go", "", 0644)

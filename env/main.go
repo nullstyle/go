@@ -5,6 +5,9 @@ package env
 import (
 	"os"
 	"path/filepath"
+	"strings"
+
+	"os/exec"
 
 	"github.com/nullstyle/go/gopath"
 	"github.com/pkg/errors"
@@ -19,8 +22,8 @@ var DefaultEnvGetter = OS
 // DefaultPathLooker looks up paths using the golang stdlib
 var DefaultPathLooker = OS
 
-//DefaultFS uses the local machine's filesystem
-var DefaultFS = afero.NewOsFs()
+//FS uses the local machine's filesystem
+var FS = afero.NewOsFs()
 
 // OS represents a backend that uses the real os
 var OS Backend = &osBackend{}
@@ -59,7 +62,7 @@ func Executable(program string) (string, error) {
 		return "", errors.Wrap(err, "lookup path failed")
 	}
 
-	file, err := DefaultFS.Stat(path)
+	file, err := FS.Stat(path)
 	if err != nil {
 		return "", errors.Wrap(err, "file stat failed")
 	}
@@ -77,6 +80,22 @@ func IsPkgNotFound(err error) bool {
 	return ok
 }
 
+// NpmPkgExists ensures an npm package is installed globally.  TODO: make
+// testable.
+func NpmPkgExists(pkg string) (string, error) {
+	out, err := exec.Command("npm", "list", "--parseable", "-g", pkg).Output()
+	_, ok := err.(*exec.ExitError)
+	if ok {
+		return "", &PkgNotFoundError{pkg}
+	}
+
+	if err != nil {
+		return "", errors.Wrap(err, "npm exec failed")
+	}
+
+	return strings.TrimSpace(string(out)), nil
+}
+
 // PkgExists returns the absolute path of pkg and ensures that the package
 // is present on the local file system underneath GOPATH.
 func PkgExists(pkg string) (string, error) {
@@ -87,7 +106,7 @@ func PkgExists(pkg string) (string, error) {
 	for _, path := range paths {
 		full := filepath.Join(path, "src", pkg)
 
-		_, err := DefaultFS.Stat(full)
+		_, err := FS.Stat(full)
 		if os.IsNotExist(err) {
 			continue
 		}

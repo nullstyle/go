@@ -3,8 +3,7 @@ package cmd
 import (
 	"log"
 
-	"github.com/nullstyle/go/envcheck"
-	"github.com/nullstyle/go/gopath"
+	"github.com/nullstyle/go/env"
 	"github.com/spf13/cobra"
 )
 
@@ -18,12 +17,7 @@ var checkCmd = &cobra.Command{
 		ensureExecutable("electron")
 		ensureExecutable("electron-packager")
 		ensureExecutable("gopherjs")
-
-		if gopath.IsCurrentSingular() {
-			log.Println("[good] GOPATH is singular")
-		} else {
-			log.Fatalln("GOPATH contains multiple folders")
-		}
+		ensureNpm("source-map-support")
 	},
 }
 
@@ -45,10 +39,19 @@ func init() {
 // ensureExecutable exits the application with a failure if an application with
 // the name provided is not in the local environment's PATH.
 func ensureExecutable(name string) {
-	_, err := envcheck.Executable(name)
+	_, err := env.Executable(name)
 	if err != nil {
-		log.Printf("`%s` MISSING", name)
+		log.Printf("program `%s` MISSING", name)
 		log.Fatal(err)
 	}
-	log.Printf("[good] `%s` found", name)
+	log.Printf("[good] program `%s` found", name)
+}
+
+func ensureNpm(name string) {
+	_, err := env.NpmPkgExists(name)
+	if err != nil {
+		log.Printf("npm `%s` MISSING", name)
+		log.Fatal(err)
+	}
+	log.Printf("[good] npm `%s` found", name)
 }
