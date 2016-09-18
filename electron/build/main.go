@@ -6,6 +6,8 @@ import (
 
 	"strings"
 
+	"os/exec"
+
 	"github.com/nullstyle/go/env"
 	"github.com/nullstyle/go/gopherjs"
 	"github.com/pkg/errors"
@@ -28,16 +30,22 @@ func Run(pkg string, os string, arch string) error {
 		return errors.Wrap(err, "failed to make build dir")
 	}
 
-	outPath := filepath.Join(outDir, "main.js")
-
+	// build gopher.js
+	outPath := filepath.Join(outDir, "gopher.js")
 	err = gopherjs.Build(pkg, outPath)
 	if err != nil {
 		return errors.Wrap(err, "compile js failed")
 	}
 
+	// copy application skeleton
 	err = copyAsset("skel/index.html", outDir)
 	if err != nil {
 		return errors.Wrap(err, "copy skell failed")
+	}
+
+	err = writePackageJSON(path, outDir)
+	if err != nil {
+		return errors.Wrap(err, "add package.json failed")
 	}
 
 	return nil
@@ -84,6 +92,25 @@ func copyAsset(asset string, outDir string) error {
 	err = afero.WriteFile(env.FS, outPath, raw, fi.Mode())
 	if err != nil {
 		return errors.Wrap(err, "failed writing asset")
+	}
+
+	return nil
+}
+
+func writePackageJSON(pkgPath string, outDir string) error {
+
+	// TODO: don't assume main.go is the entry point
+	main := filepath.Join(pkgPath, "main.go")
+	raw, err := exec.Command("go", "run", main, "-writePackageJSON").Output()
+	if err != nil {
+		return errors.Wrap(err, "get package.json content failed")
+	}
+
+	outPath := filepath.Join(outDir, "package.json")
+
+	err = afero.WriteFile(env.FS, outPath, raw, 0644)
+	if err != nil {
+		return errors.Wrap(err, "failed writing file")
 	}
 
 	return nil
