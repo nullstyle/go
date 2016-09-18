@@ -3,7 +3,7 @@ package cmd
 import (
 	"log"
 
-	"github.com/nullstyle/go/gopherjs"
+	"github.com/nullstyle/go/electron/build"
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +13,7 @@ var buildCmd = &cobra.Command{
 	Short: "Build the go-electron app at PATH",
 	Long:  `TODO`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := gopherjs.Build(args[0])
+		err := build.Run(args[0], "all", "all")
 		if err != nil {
 			log.Fatal(err)
 		}

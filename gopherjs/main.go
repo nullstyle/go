@@ -2,8 +2,6 @@
 package gopherjs
 
 import (
-	"path/filepath"
-
 	"os/exec"
 
 	"github.com/nullstyle/go/env"
@@ -16,13 +14,12 @@ type BuildError struct {
 }
 
 // Build builds the pkg into javascript
-func Build(pkg string) error {
-	path, err := env.PkgExists(pkg)
+func Build(pkg string, outPath string) error {
+	_, err := env.PkgExists(pkg)
 	if err != nil {
 		return errors.Wrap(err, "env/PkgExists failed")
 	}
 
-	outPath := filepath.Join(path, "main.js")
 	cmd := exec.Command("gopherjs", "build", pkg, "-o", outPath)
 
 	raw, err := cmd.Output()
