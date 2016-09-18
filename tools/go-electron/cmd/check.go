@@ -17,6 +17,7 @@ var checkCmd = &cobra.Command{
 		ensureExecutable("electron")
 		ensureExecutable("electron-packager")
 		ensureExecutable("gopherjs")
+		ensureExecutable("go-bindata")
 		ensureNpm("source-map-support")
 	},
 }
