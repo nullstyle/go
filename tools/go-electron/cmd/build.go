@@ -15,7 +15,7 @@ var buildCmd = &cobra.Command{
 	Short: "Build the go-electron app at PATH",
 	Long:  `TODO`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := build.Run(args[0], "all", "all")
+		_, err := build.Run(args[0], "all", "all")
 		switch err := errors.Cause(err).(type) {
 		case nil:
 			// noop

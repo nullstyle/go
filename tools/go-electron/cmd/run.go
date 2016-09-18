@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"syscall"
 
+	"github.com/nullstyle/go/electron/build"
 	"github.com/spf13/cobra"
 )
 
@@ -16,9 +17,19 @@ var runCmd = &cobra.Command{
 	Long:  `run compiles app at PATH and then starts it up`,
 	Run: func(cmd *cobra.Command, args []string) {
 
+		dir, err := build.Run(args[0], "all", "all")
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		electron, err := exec.LookPath("electron")
 		if err != nil {
 			log.Fatal(err)
+		}
+
+		err = os.Chdir(dir)
+		if err != nil {
+			log.Fatalln("couldn't change to build dir:", err)
 		}
 
 		eargs := []string{"electron", "."}

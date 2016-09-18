@@ -17,38 +17,39 @@ import (
 //go:generate go-bindata -pkg=build skel/...
 
 // Run builds `pkg` as an electron app for the os/arch pair provided, writing
-// the result to the build directory underneath pkg.
-func Run(pkg string, os string, arch string) error {
+// the result to the build directory underneath pkg. returns the absolute path
+// of the built electron directory.
+func Run(pkg string, os string, arch string) (string, error) {
 	path, err := env.PkgExists(pkg)
 	if err != nil {
-		return errors.Wrap(err, "env/PkgExists failed")
+		return "", errors.Wrap(err, "env/PkgExists failed")
 	}
 
 	outDir := filepath.Join(path, ".go-electron")
 	err = env.FS.MkdirAll(outDir, 0755)
 	if err != nil {
-		return errors.Wrap(err, "failed to make build dir")
+		return "", errors.Wrap(err, "failed to make build dir")
 	}
 
 	// build gopherjs
 	outPath := filepath.Join(outDir, "main.js")
 	err = gopherjs.Build(pkg, outPath)
 	if err != nil {
-		return errors.Wrap(err, "compile js failed")
+		return "", errors.Wrap(err, "compile js failed")
 	}
 
 	// copy application skeleton
 	err = copyAssetDir("skel", outDir)
 	if err != nil {
-		return errors.Wrap(err, "copy skell failed")
+		return "", errors.Wrap(err, "copy skell failed")
 	}
 
 	err = writePackageJSON(path, outDir)
 	if err != nil {
-		return errors.Wrap(err, "add package.json failed")
+		return "", errors.Wrap(err, "add package.json failed")
 	}
 
-	return nil
+	return outDir, nil
 }
 
 func copyAsset(asset string, outDir string) error {

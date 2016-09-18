@@ -5,6 +5,7 @@ import (
 
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/nullstyle/go/electron"
+	njs "github.com/nullstyle/go/gopherjs/js"
 )
 
 var win *js.Object
@@ -22,5 +23,6 @@ func main() {
 }
 
 func ready(app *electron.App) {
-	log.Println("in the ready callback")
+	dirname := njs.Require("./node").Get("dirname").String()
+	log.Println("in the ready callback:", dirname)
 }
