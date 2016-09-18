@@ -7,10 +7,15 @@ import (
 	"github.com/spf13/afero"
 )
 
-//go:generate mockery -all
+//go:generate mockery -name Backend
 
+// DefaultPathLooker looks up paths using the golang stdlib
 var DefaultPathLooker = OS
+
+//DefaultFS uses the local machine's filesystem
 var DefaultFS = afero.NewOsFs()
+
+// OS represents a backend that uses the real os
 var OS Backend = &osBackend{}
 
 // Backend is a backend

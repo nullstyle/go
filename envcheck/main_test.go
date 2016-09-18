@@ -4,32 +4,22 @@ import (
 	"errors"
 	"testing"
 
-	"io/ioutil"
-	"os"
-
 	"github.com/nullstyle/go/envcheck/mocks"
-	"github.com/spf13/afero"
+	"github.com/nullstyle/go/test"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestExecutable(t *testing.T) {
-	dir, err := ioutil.TempDir(os.TempDir(), "envcheck-test")
-	require.NoError(t, err)
-	defer os.RemoveAll(dir)
+	fs, done := test.FS(t, "envcheck")
+	defer done()
 
 	be := &mocks.Backend{}
-	fs := afero.NewBasePathFs(afero.NewOsFs(), dir)
 
 	DefaultPathLooker = be
 	DefaultFS = fs
 
-	err = fs.MkdirAll("/bin", 0777)
-	require.NoError(t, err)
-	err = afero.WriteFile(fs, "/bin/found", []byte(""), 0755)
-	require.NoError(t, err)
-	err = afero.WriteFile(fs, "/bin/non-executable", []byte(""), 0644)
-	require.NoError(t, err)
+	test.WriteFile(t, fs, "/bin/found", "", 0755)
+	test.WriteFile(t, fs, "/bin/non-executable", "", 0644)
 
 	// happy path
 	be.On("LookupPath", "foo").Return("/bin/found", nil)
