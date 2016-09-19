@@ -8,10 +8,13 @@ go:
 install:
 - go get github.com/mattn/goveralls
 - go get github.com/Masterminds/glide
+- go get github.com/modocache/gover
+
 script:
 - glide install
-- go test -covermode=count -coverprofile=profile.cov -race $(glide novendor)
-- goveralls -coverprofile=profile.cov -service=travis-ci"
+-  go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' $(glide novendor) | xargs sh -c
+- gover
+- goveralls -coverprofile=gover.coverprofile -service=travis-ci"
 matrix:
   fast_finish: true
   allow_failures:
