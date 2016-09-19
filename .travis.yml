@@ -12,9 +12,9 @@ install:
 
 script:
 - glide install
--  go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' $(glide novendor) | xargs sh -c
+-  go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' $(glide novendor) | xargs -L 1 sh -c
 - gover
-- goveralls -coverprofile=gover.coverprofile -service=travis-ci"
+- goveralls -coverprofile=gover.coverprofile -service=travis-ci
 matrix:
   fast_finish: true
   allow_failures:
