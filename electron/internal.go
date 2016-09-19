@@ -2,9 +2,10 @@ package electron
 
 import (
 	"flag"
-	"log"
+	"fmt"
 
 	"github.com/gopherjs/gopherjs/js"
+	njs "github.com/nullstyle/go/gopherjs/js"
 )
 
 var (
@@ -17,12 +18,13 @@ func createWindow(width, height int) *js.Object {
 		"height": height,
 	})
 
-	dir := js.Module.Get("__dirname").String()
-	log.Println("hello", dir)
-	// path := fmt.Sprintf(`file://%s/index.html`, dir)
+	dir := njs.Require("./node").Get("dirname").String()
+	path := fmt.Sprintf(`file://%s/index.html`, dir)
 	// path := `file://index.html`
 
-	win.Call("loadURL", "https://github.com")
+	win.Call("loadURL", path)
+
+	// TODO: how should I best conditionalize the dev tools opening?
 	// win.Get("webContents").Call("openDevTools")
 
 	return win

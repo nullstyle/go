@@ -32,10 +32,16 @@ func Run(pkg string, os string, arch string) (string, error) {
 	}
 
 	// build gopherjs
-	outPath := filepath.Join(outDir, "main.js")
-	err = gopherjs.Build(pkg, outPath)
+	mainPath := filepath.Join(outDir, "main.js")
+	err = gopherjs.Build(pkg, mainPath)
 	if err != nil {
-		return "", errors.Wrap(err, "compile js failed")
+		return "", errors.Wrap(err, "compile main.js failed")
+	}
+
+	browserPath := filepath.Join(outDir, "browser.js")
+	err = gopherjs.Build(pkg+"/browser", browserPath)
+	if err != nil {
+		return "", errors.Wrap(err, "compile browser.js failed")
 	}
 
 	// copy application skeleton

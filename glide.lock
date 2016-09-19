@@ -1,14 +1,20 @@
-hash: 62387b579ce70bc17d8e079ed008d811c61ca235574b8966bad605e5b7292188
-updated: 2016-09-17T22:40:23.677516808-07:00
+hash: 9e367473c75efa3d19a799eba21d700bbe96293f681377f4081dbea82287af26
+updated: 2016-09-18T23:24:14.099888497-07:00
 imports:
 - name: github.com/davecgh/go-spew
-  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
   - spew
 - name: github.com/fsnotify/fsnotify
   version: f12c6236fe7b5cf6bcf30e5935d08cb079d78334
 - name: github.com/gedex/inflector
   version: 91797f1712fd58f224781be1080b8613d096187e
+- name: github.com/gopherjs/gopherjs
+  version: f2fc182abb28925c7aa40502db839c6ebd7f7171
+  subpackages:
+  - js
+- name: github.com/gopherjs/vecty
+  version: 69f5d98184de7a3bf2284853a7922c4b47488883
 - name: github.com/hashicorp/hcl
   version: ef8133da8cda503718a74741312bf50821e6de79
   subpackages:
@@ -37,7 +43,7 @@ imports:
 - name: github.com/pkg/sftp
   version: 8197a2e580736b78d704be0fc47b2324c0591a32
 - name: github.com/pmezard/go-difflib
-  version: 792786c7400a136282c1664665ae0a8db921c6c2
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
 - name: github.com/spf13/afero
@@ -56,11 +62,12 @@ imports:
 - name: github.com/spf13/viper
   version: 16990631d4aa7e38f73dbbbf37fa13e67c648531
 - name: github.com/stretchr/objx
-  version: 1a9d0bb9f541897e62256577b352fdbc1fb4fd94
+  version: cbeaeb16a013161a98496fad62933b1d21786672
 - name: github.com/stretchr/testify
   version: d77da356e56a7428ad25149ca77381849a6a5232
   subpackages:
   - mock
+  - require
   - assert
 - name: golang.org/x/crypto
   version: 81372b2fc2f10bef2a7f338da115c315a56b2726
