@@ -39,4 +39,5 @@ func WriteFile(
 	require.NoError(t, err)
 
 	err = afero.WriteFile(fs, path, []byte(contents), perm)
+	require.NoError(t, err)
 }
