@@ -2,7 +2,7 @@ package: github.com/nullstyle/go
 import:
 - package: github.com/pkg/errors
 - package: github.com/gedex/inflector
-testImport:
-- package: github.com/stretchr/testify
-  subpackages:
-  - assert
+- package: github.com/spf13/cobra
+- package: github.com/spf13/viper
+- package: github.com/spf13/afero
+- package: github.com/gopherjs/vecty
