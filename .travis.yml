@@ -1,0 +1,17 @@
+language: go
+services:
+- postgres
+go:
+- '1.6'
+- '1.7'
+- tip
+install:
+- go get github.com/Masterminds/glide
+script:
+- glide install
+- go test -race $(glide novendor)
+matrix:
+  fast_finish: true
+  allow_failures:
+  - go: tip
+  - go: '1.6'
