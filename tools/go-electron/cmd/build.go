@@ -1,13 +1,6 @@
 package cmd
 
-import (
-	"log"
-
-	"github.com/nullstyle/go/electron/build"
-	"github.com/nullstyle/go/gopherjs"
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
-)
+import "github.com/spf13/cobra"
 
 // buildCmd represents the build command
 var buildCmd = &cobra.Command{
@@ -15,15 +8,9 @@ var buildCmd = &cobra.Command{
 	Short: "Build the go-electron app at PATH",
 	Long:  `TODO`,
 	Run: func(cmd *cobra.Command, args []string) {
-		_, err := build.Run(args[0], "all", "all")
-		switch err := errors.Cause(err).(type) {
-		case nil:
-			// noop
-		case *gopherjs.BuildError:
-			log.Fatalf("gopherjs build error: %s", err.ExitErr.Stderr)
-		default:
-			log.Fatal(err)
-		}
+
+		pkg := expandPkg(args[0])
+		buildPkg(pkg)
 	},
 }
 
