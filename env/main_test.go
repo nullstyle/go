@@ -13,7 +13,7 @@ import (
 )
 
 func TestExecutable(t *testing.T) {
-	fs, done := test.FS(t, "envcheck")
+	fs, done := test.FS(t, "env")
 	defer done()
 
 	be := &mocks.Backend{}
@@ -71,7 +71,7 @@ func TestIsPkgNotFound(t *testing.T) {
 }
 
 func TestPkgExists(t *testing.T) {
-	fs, done := test.FS(t, "envcheck")
+	fs, done := test.FS(t, "env")
 	defer done()
 	be := &mocks.Backend{}
 	DefaultPathLooker = be
@@ -102,7 +102,7 @@ func TestPkgExists(t *testing.T) {
 }
 
 func TestPkgPath(t *testing.T) {
-	fs, done := test.FS(t, "envcheck")
+	fs, done := test.FS(t, "env")
 	defer done()
 	be := &mocks.Backend{}
 	DefaultPathLooker = be
@@ -133,7 +133,7 @@ func TestPkgPath(t *testing.T) {
 }
 
 func TestRealPath(t *testing.T) {
-	fs, done := test.FS(t, "envcheck")
+	fs, done := test.FS(t, "env")
 	defer done()
 
 	// happy path: local fs

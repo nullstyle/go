@@ -131,7 +131,7 @@ func PkgPath(pkg string) (string, error) {
 	}
 
 	if err != nil {
-		return "", errors.Wrap(err, "envcheck/PkgExists failed")
+		return "", errors.Wrap(err, "env/PkgExists failed")
 	}
 
 	return path, nil
