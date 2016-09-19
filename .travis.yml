@@ -10,8 +10,8 @@ install:
 - go get github.com/Masterminds/glide
 script:
 - glide install
-- go test -race $(glide novendor)
-- "$HOME/gopath/bin/goveralls -service=travis-ci"
+- go test -covermode=count -coverprofile=profile.cov -race $(glide novendor)
+- goveralls -coverprofile=profile.cov -service=travis-ci"
 matrix:
   fast_finish: true
   allow_failures:
