@@ -22,6 +22,9 @@ func (be *osBackend) Getenv(key string) string {
 	return os.Getenv(key)
 }
 
-var _ PathLooker = &osBackend{}
-var _ KnowsDirs = &osBackend{}
-var _ EnvGetter = &osBackend{}
+// Getwd implements KnowsDirs
+func (be *osBackend) Getwd() (string, error) {
+	return os.Getwd()
+}
+
+var _ Backend = &osBackend{}

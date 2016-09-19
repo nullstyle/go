@@ -18,7 +18,7 @@ func TestExecutable(t *testing.T) {
 
 	be := &mocks.Backend{}
 
-	DefaultPathLooker = be
+	DefaultBackend = be
 	FS = fs
 
 	test.WriteFile(t, fs, "/bin/found", "", 0755)
@@ -42,6 +42,43 @@ func TestExecutable(t *testing.T) {
 	assert.EqualError(t, err, "error not executable")
 
 	be.AssertExpectations(t)
+}
+
+func TestExpandPkg(t *testing.T) {
+	fs, done := test.FS(t, "env")
+	defer done()
+	FS = fs
+
+	test.WriteFile(t, fs, "/go1/src/pkg1/main.go", "", 0644)
+	test.WriteFile(t, fs, "/go1/src/some/nested/pkg/main.go", "", 0644)
+	test.WriteFile(t, fs, "/go2/src/pkg2/main.go", "", 0644)
+	test.WriteFile(t, fs, "/go3/src/pkg3/main.go", "", 0644)
+
+	// happy path
+	mockBackend(func(be *mocks.Backend) {
+		be.On("Getenv", "GOPATH").Return("/go1:/go2")
+
+		be.On("Getwd").Return("/go1/src/some/nested", nil)
+		full, err := ExpandPkg("./pkg")
+		if assert.NoError(t, err) {
+			assert.Equal(t, "some/nested/pkg", full)
+		}
+
+		// already expanded
+		full, err = ExpandPkg("pkg2")
+		if assert.NoError(t, err) {
+			assert.Equal(t, "pkg2", full)
+		}
+	})
+
+	// sad path, not in gopath
+	mockBackend(func(be *mocks.Backend) {
+		be.On("Getenv", "GOPATH").Return("/go1:/go2")
+
+		be.On("Getwd").Return("/go3/src", nil)
+		_, err := ExpandPkg("./pkg3")
+		assert.Error(t, err)
+	})
 }
 
 func TestIsPkgNotFound(t *testing.T) {
@@ -73,63 +110,60 @@ func TestIsPkgNotFound(t *testing.T) {
 func TestPkgExists(t *testing.T) {
 	fs, done := test.FS(t, "env")
 	defer done()
-	be := &mocks.Backend{}
-	DefaultPathLooker = be
-	DefaultEnvGetter = be
 	FS = fs
-
 	test.WriteFile(t, fs, "/go1/src/pkg1/main.go", "", 0644)
 	test.WriteFile(t, fs, "/go2/src/pkg2/main.go", "", 0644)
 
-	be.On("Getenv", "GOPATH").Return("/go1:/go2")
+	mockBackend(func(be *mocks.Backend) {
 
-	// happy path: in first entry
-	path, err := PkgExists("pkg1")
-	if assert.NoError(t, err) {
-		assert.Equal(t, "/go1/src/pkg1", path)
-	}
-	// happy path: in second entry
-	path, err = PkgExists("pkg2")
-	if assert.NoError(t, err) {
-		assert.Equal(t, "/go2/src/pkg2", path)
-	}
+		be.On("Getenv", "GOPATH").Return("/go1:/go2")
 
-	// sad path: doesn't exist
-	_, err = PkgExists("missing")
-	assert.Error(t, err)
+		// happy path: in first entry
+		path, err := PkgExists("pkg1")
+		if assert.NoError(t, err) {
+			assert.Equal(t, "/go1/src/pkg1", path)
+		}
+		// happy path: in second entry
+		path, err = PkgExists("pkg2")
+		if assert.NoError(t, err) {
+			assert.Equal(t, "/go2/src/pkg2", path)
+		}
 
-	be.AssertExpectations(t)
+		// sad path: doesn't exist
+		_, err = PkgExists("missing")
+		assert.Error(t, err)
+
+		be.AssertExpectations(t)
+	})
 }
 
 func TestPkgPath(t *testing.T) {
 	fs, done := test.FS(t, "env")
 	defer done()
-	be := &mocks.Backend{}
-	DefaultPathLooker = be
-	DefaultEnvGetter = be
 	FS = fs
-
 	test.WriteFile(t, fs, "/go1/src/pkg1/main.go", "", 0644)
 	test.WriteFile(t, fs, "/go2/src/pkg2/main.go", "", 0644)
 
-	be.On("Getenv", "GOPATH").Return("/go1:/go2")
+	mockBackend(func(be *mocks.Backend) {
+		be.On("Getenv", "GOPATH").Return("/go1:/go2")
 
-	// happy path: in first entry
-	path, err := PkgPath("pkg1")
-	if assert.NoError(t, err) {
-		assert.Equal(t, "/go1/src/pkg1", path)
-	}
-	// happy path: in second entry
-	path, err = PkgPath("pkg2")
-	if assert.NoError(t, err) {
-		assert.Equal(t, "/go2/src/pkg2", path)
-	}
+		// happy path: in first entry
+		path, err := PkgPath("pkg1")
+		if assert.NoError(t, err) {
+			assert.Equal(t, "/go1/src/pkg1", path)
+		}
+		// happy path: in second entry
+		path, err = PkgPath("pkg2")
+		if assert.NoError(t, err) {
+			assert.Equal(t, "/go2/src/pkg2", path)
+		}
 
-	// happy path: new pkg
-	path, err = PkgPath("pkg3")
-	if assert.NoError(t, err) {
-		assert.Equal(t, "/go1/src/pkg3", path)
-	}
+		// happy path: new pkg
+		path, err = PkgPath("pkg3")
+		if assert.NoError(t, err) {
+			assert.Equal(t, "/go1/src/pkg3", path)
+		}
+	})
 }
 
 func TestRealPath(t *testing.T) {
