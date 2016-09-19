@@ -33,13 +33,13 @@ func Run(pkg string, os string, arch string) (string, error) {
 
 	// build gopherjs
 	mainPath := filepath.Join(outDir, "main.js")
-	err = gopherjs.Build(pkg, mainPath)
+	err = gopherjs.Build(pkg, mainPath, true)
 	if err != nil {
 		return "", errors.Wrap(err, "compile main.js failed")
 	}
 
 	browserPath := filepath.Join(outDir, "browser.js")
-	err = gopherjs.Build(pkg+"/browser", browserPath)
+	err = gopherjs.Build(pkg+"/browser", browserPath, true)
 	if err != nil {
 		return "", errors.Wrap(err, "compile browser.js failed")
 	}

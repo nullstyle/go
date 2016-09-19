@@ -14,7 +14,7 @@ type BuildError struct {
 }
 
 // Build builds the pkg into javascript
-func Build(pkg string, outPath string) error {
+func Build(pkg string, outPath string, localmap bool) error {
 	_, err := env.PkgExists(pkg)
 	if err != nil {
 		return errors.Wrap(err, "env/PkgExists failed")
@@ -25,7 +25,12 @@ func Build(pkg string, outPath string) error {
 		return errors.Wrap(err, "env/RealPath failed")
 	}
 
-	cmd := exec.Command("gopherjs", "build", pkg, "-o", realPath)
+	args := []string{"build", pkg, "-o", realPath}
+	if localmap {
+		args = append(args, "--localmap")
+	}
+
+	cmd := exec.Command("gopherjs", args...)
 
 	raw, err := cmd.Output()
 	if err != nil {
