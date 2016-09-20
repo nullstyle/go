@@ -44,6 +44,8 @@ type PkgNotFoundError struct {
 	Pkg string
 }
 
+// TODO: add BuildTime func
+
 // Executable asserts that program is present and executable on the local
 // system. Returns the resolved path to the program.
 func Executable(program string) (string, error) {
@@ -176,4 +178,10 @@ func RealPath(path string) (string, error) {
 	}
 
 	return real, nil
+}
+
+// Version returns the version string that was included when building the
+// current program, or "devel" should one not be set.
+func Version() string {
+	return version
 }
