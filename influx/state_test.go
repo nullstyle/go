@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,34 +22,62 @@ func TestStore_Dispatch(t *testing.T) {
 }
 
 func TestStore_Dispatch_AfterHook(t *testing.T) {
-	_, store := baseTest(t)
-	var called bool
-	store.UseHooks(AfterDispatchFunc(func(ctx context.Context, action Action) error {
-		called = true
-		return nil
-	}))
+	t.Run("happy path", func(t *testing.T) {
+		_, store := baseTest(t)
+		var called bool
+		store.UseHooks(AfterDispatchFunc(func(ctx context.Context, action Action) error {
+			called = true
+			return nil
+		}))
 
-	// check after dispatch is called
-	err := store.Dispatch(struct{}{})
-	if assert.NoError(t, err) {
-		assert.True(t, called, "after fn wasn't called")
-	}
+		// check after dispatch is called
+		err := store.Dispatch(struct{}{})
+		if assert.NoError(t, err) {
+			assert.True(t, called, "after fn wasn't called")
+		}
+	})
+
+	t.Run("sad path: erroring hook", func(t *testing.T) {
+		_, store := baseTest(t)
+		store.UseHooks(AfterDispatchFunc(func(ctx context.Context, action Action) error {
+			return errors.New("kaboom")
+		}))
+
+		// check after dispatch is called
+		err := store.Dispatch(struct{}{})
+		assert.Error(t, err)
+	})
 }
 
 func TestStore_Dispatch_BeforeHook(t *testing.T) {
-	state, store := baseTest(t)
-	var called bool
-	store.UseHooks(BeforeDispatchFunc(func(ctx context.Context, action Action) error {
-		assert.Equal(t, 0, state.Counter, "before hook called _after_ state was manipulated")
-		called = true
-		return nil
-	}))
+	t.Run("happy path", func(t *testing.T) {
+		state, store := baseTest(t)
+		var called bool
+		store.UseHooks(BeforeDispatchFunc(func(ctx context.Context, action Action) error {
+			assert.Equal(t, 0, state.Counter, "before hook called _after_ state was manipulated")
+			called = true
+			return nil
+		}))
 
-	// check after dispatch is called
-	err := store.Dispatch(struct{}{})
-	if assert.NoError(t, err) {
-		assert.True(t, called, "before fn wasn't called")
-	}
+		// check after dispatch is called
+		err := store.Dispatch(struct{}{})
+		if assert.NoError(t, err) {
+			assert.True(t, called, "before fn wasn't called")
+		}
+	})
+
+	t.Run("sad path: erroring hook", func(t *testing.T) {
+		_, store := baseTest(t)
+		store.UseHooks(BeforeDispatchFunc(func(ctx context.Context, action Action) error {
+			return errors.New("kaboom")
+		}))
+
+		// check after dispatch is called
+		err := store.Dispatch(struct{}{})
+		if assert.Error(t, err) {
+
+		}
+	})
 }
 
 func BenchmarkStore_Dispatch(b *testing.B) {
