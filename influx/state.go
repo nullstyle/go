@@ -10,35 +10,37 @@ import (
 	"github.com/pkg/errors"
 )
 
-// AfterDispatch adds a function that will be called after each successful
-// dispatch of an action against the store
-func (store *Store) AfterDispatch(fn AfterFunc) {
-	store.lock.Lock()
-	defer store.lock.Unlock()
-
-	store.afterFns = append(store.afterFns, fn)
-}
-
 // Dispatch applies the provided action to the store
-func (store *Store) Dispatch(a Action) error {
+func (store *Store) Dispatch(action Action) error {
 	// TODO: think harder about concurrency protection
 	store.lock.Lock()
 	defer store.lock.Unlock()
+
+	// create the dispatch context
+	// TODO: probably want to add a configurable deadline or timeout here
+	ctx := context.TODO()
+
+	// run the before dispatch hooks
+	for _, hook := range store.hooks.before {
+		err := hook.BeforeDispatch(ctx, action)
+		if err != nil {
+			return errors.Wrap(err, "after-dispatch failed")
+		}
+	}
 
 	// TODO: run action middleware to mutate action
 	// TODO: plan the dispatch
 
 	// run the dispatch
 	statev := reflect.ValueOf(store.state).Elem()
-	ctx := context.TODO()
-	err := store.dispatchValue(ctx, statev, a)
+	err := store.dispatchValue(ctx, statev, action)
 	if err != nil {
 		return errors.Wrap(err, "dispatch-value failed")
 	}
 
-	// run the after dispatch funcs
-	for _, fn := range store.afterFns {
-		err := fn(store)
+	// run the after dispatch hooks
+	for _, hook := range store.hooks.after {
+		err := hook.AfterDispatch(ctx, action)
 		if err != nil {
 			return errors.Wrap(err, "after-dispatch failed")
 		}
@@ -82,6 +84,23 @@ func (store *Store) Save(w io.Writer) error {
 	}
 
 	return nil
+}
+
+// UseHooks adds a function that will be called after each successful
+// dispatch of an action against the store
+func (store *Store) UseHooks(hook Hook) {
+	store.lock.Lock()
+	defer store.lock.Unlock()
+
+	before, ok := hook.(BeforeHook)
+	if ok {
+		store.hooks.before = append(store.hooks.before, before)
+	}
+
+	after, ok := hook.(AfterHook)
+	if ok {
+		store.hooks.after = append(store.hooks.after, after)
+	}
 }
 
 func (store *Store) dispatchValue(

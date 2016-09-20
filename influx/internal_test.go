@@ -24,6 +24,15 @@ func (state *TestChild) HandleAction(ctx context.Context, action Action) error {
 	return nil
 }
 
+type TestHook struct{}
+
+func (hook *TestHook) AfterDispatch(ctx context.Context, action Action) error {
+	return nil
+}
+func (hook *TestHook) BeforeDispatch(ctx context.Context, action Action) error {
+	return nil
+}
+
 type TestState struct {
 	Counter int
 	Child   TestChild
@@ -55,3 +64,6 @@ func baseTest(t *testing.T) (*TestState, *Store) {
 
 	return state, store
 }
+
+// ensure TestHook is comprehensice
+var _ Hooks = &TestHook{}

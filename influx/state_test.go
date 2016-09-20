@@ -2,30 +2,13 @@ package influx
 
 import (
 	"bytes"
-	"testing"
-
+	"context"
 	"encoding/json"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestStore_AfterDispatch(t *testing.T) {
-	_, store := baseTest(t)
-
-	var called bool
-	store.AfterDispatch(func(store *Store) error {
-		called = true
-		return nil
-	})
-	assert.Len(t, store.afterFns, 1)
-
-	// check after dispatch is called
-	err := store.Dispatch(struct{}{})
-	if assert.NoError(t, err) {
-		assert.True(t, called, "after fn wasn't called")
-	}
-}
 
 func TestStore_Dispatch(t *testing.T) {
 	state, store := baseTest(t)
@@ -34,6 +17,37 @@ func TestStore_Dispatch(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.Equal(t, 2, state.Counter)
 		assert.True(t, state.Child.Called, "child handler not called")
+	}
+}
+
+func TestStore_Dispatch_AfterHook(t *testing.T) {
+	_, store := baseTest(t)
+	var called bool
+	store.UseHooks(AfterDispatchFunc(func(ctx context.Context, action Action) error {
+		called = true
+		return nil
+	}))
+
+	// check after dispatch is called
+	err := store.Dispatch(struct{}{})
+	if assert.NoError(t, err) {
+		assert.True(t, called, "after fn wasn't called")
+	}
+}
+
+func TestStore_Dispatch_BeforeHook(t *testing.T) {
+	state, store := baseTest(t)
+	var called bool
+	store.UseHooks(BeforeDispatchFunc(func(ctx context.Context, action Action) error {
+		assert.Equal(t, 0, state.Counter, "before hook called _after_ state was manipulated")
+		called = true
+		return nil
+	}))
+
+	// check after dispatch is called
+	err := store.Dispatch(struct{}{})
+	if assert.NoError(t, err) {
+		assert.True(t, called, "before fn wasn't called")
 	}
 }
 
@@ -102,4 +116,13 @@ func TestStore_Save(t *testing.T) {
 
 		assert.Equal(t, 3, loaded.Counter)
 	}
+
+}
+
+func TestStore_UseHooks(t *testing.T) {
+	_, store := baseTest(t)
+	hook := &TestHook{}
+	store.UseHooks(hook)
+	assert.Len(t, store.hooks.after, 1)
+	assert.Len(t, store.hooks.before, 1)
 }
