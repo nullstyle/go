@@ -37,6 +37,37 @@ func TestStore_Dispatch(t *testing.T) {
 	}
 }
 
+func BenchmarkStore_Dispatch(b *testing.B) {
+	cases := []struct {
+		Name   string
+		State  interface{}
+		Action Action
+	}{
+		{"simple", &TestState{}, TestAction{Amount: 1}},
+		{"bigger", &TestBiggerState{}, TestAction{Amount: 1}},
+		// TODO: {"dynamic plan", &TestState{}, TestAction{Amount: 1}},
+	}
+
+	for _, kase := range cases {
+		b.Run(kase.Name, func(b *testing.B) {
+
+			store, err := New(kase.State)
+			if err != nil {
+				b.Errorf("error while creating store: %s", err)
+				b.FailNow()
+			}
+
+			for i := 0; i < b.N; i++ {
+				err := store.Dispatch(kase.Action)
+				if err != nil {
+					b.Errorf("error while dispatching: %s", err)
+					b.Fail()
+				}
+			}
+		})
+	}
+}
+
 func TestStore_Get(t *testing.T) {
 	state, store := baseTest(t)
 	state.Counter = 3

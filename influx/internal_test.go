@@ -29,6 +29,16 @@ type TestState struct {
 	Child   TestChild
 }
 
+type TestBiggerState struct {
+	Child1 TestState
+	Child2 TestState
+	Child3 TestState
+	Child4 TestState
+	Child5 struct {
+		Child6 TestState
+	}
+}
+
 func (state *TestState) HandleAction(ctx context.Context, action Action) error {
 	switch action := action.(type) {
 	case TestAction:
