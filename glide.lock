@@ -1,6 +1,8 @@
-hash: 9e367473c75efa3d19a799eba21d700bbe96293f681377f4081dbea82287af26
-updated: 2016-09-18T23:24:14.099888497-07:00
+hash: ce967fb17755c5408b91c6507a1c3f21af63ba0e644948f37308d88bbe45afe7
+updated: 2016-09-19T20:59:32.096776389-07:00
 imports:
+- name: github.com/bep/gr
+  version: 4dcf98465163b2d4881cee1fc0a2897a0c6cca1c
 - name: github.com/davecgh/go-spew
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
