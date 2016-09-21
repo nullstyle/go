@@ -35,5 +35,18 @@ func (hook *beforeFunc) BeforeDispatch(
 	return hook.Fn(ctx, action)
 }
 
+type errorFunc struct {
+	Fn ErrorFunc
+}
+
+func (hook *errorFunc) DispatchError(
+	ctx context.Context,
+	action Action,
+	e error,
+) error {
+	return hook.Fn(ctx, action, e)
+}
+
 var _ AfterHook = &afterFunc{}
 var _ BeforeHook = &beforeFunc{}
+var _ ErrorHook = &errorFunc{}

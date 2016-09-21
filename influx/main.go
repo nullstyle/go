@@ -38,10 +38,18 @@ type ActionError struct {
 
 type BeforeFunc func(context.Context, Action) error
 
-// AfterHook represents a hook function that is triggered at the beginning of
+// BeforeHook represents a hook function that is triggered at the beginning of
 // the dispatch process.
 type BeforeHook interface {
 	BeforeDispatch(context.Context, Action) error
+}
+
+type ErrorFunc func(context.Context, Action, error) error
+
+// ErrorHook represents a hook function that is triggered whenever an error
+// occurs durring dispatch.
+type ErrorHook interface {
+	DispatchError(ctx context.Context, action Action, e error) error
 }
 
 // Handler represents a portion of state that knows how to mutate itself in
@@ -55,12 +63,25 @@ type Handler interface {
 // the "Hooks" type for a list of available hooks.
 type Hook interface{}
 
+// HookError represents an error that occurred while running a hook function
+type HookError struct {
+	Index int
+	Hook  Hook
+	Err   error
+}
+
 // Hooks represents a type that implements all the possible influx hook
 // interfaces.  It's never used directly, but defined here to document the
 // possible implementations that can be provided to UseHooks()
 type Hooks interface {
 	AfterHook
 	BeforeHook
+	ErrorHook
+}
+
+// Named represent a value that know's its own name
+type Named interface {
+	Name() string
 }
 
 // Snapshot is a snapshot of a store's state
@@ -78,9 +99,11 @@ type Store struct {
 	hooks struct {
 		before []BeforeHook
 		after  []AfterHook
+		error  []ErrorHook
 	}
 }
 
+// Context implements
 func Context(parent context.Context, store *Store) context.Context {
 	return context.WithValue(parent, &contextKeys.store, store)
 }
@@ -108,6 +131,11 @@ func AfterDispatchFunc(fn AfterFunc) AfterHook {
 // BeforeDispatchFunc wraps the provided fn in a BeforeHook implementation
 func BeforeDispatchFunc(fn BeforeFunc) BeforeHook {
 	return &beforeFunc{fn}
+}
+
+// OnErrorFunc wraps the provided fn in a ErrorHook implementation
+func OnErrorFunc(fn ErrorFunc) ErrorHook {
+	return &errorFunc{fn}
 }
 
 // New wraps the provided state in a new store

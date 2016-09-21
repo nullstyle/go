@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"log"
 	"reflect"
 	"time"
 
@@ -21,10 +22,11 @@ func (store *Store) Dispatch(action Action) error {
 	ctx := context.TODO()
 
 	// run the before dispatch hooks
-	for _, hook := range store.hooks.before {
+	for i, hook := range store.hooks.before {
 		err := hook.BeforeDispatch(ctx, action)
 		if err != nil {
-			return errors.Wrap(err, "after-dispatch failed")
+			store.errorHooks(ctx, store, err)
+			return &HookError{Index: i, Hook: hook, Err: err}
 		}
 	}
 
@@ -35,14 +37,16 @@ func (store *Store) Dispatch(action Action) error {
 	statev := reflect.ValueOf(store.state).Elem()
 	err := store.dispatchValue(ctx, statev, action)
 	if err != nil {
-		return errors.Wrap(err, "dispatch-value failed")
+		store.errorHooks(ctx, store, err)
+		return err
 	}
 
 	// run the after dispatch hooks
-	for _, hook := range store.hooks.after {
+	for i, hook := range store.hooks.after {
 		err := hook.AfterDispatch(ctx, action)
 		if err != nil {
-			return errors.Wrap(err, "after-dispatch failed")
+			store.errorHooks(ctx, store, err)
+			return &HookError{Index: i, Hook: hook, Err: err}
 		}
 	}
 
@@ -101,6 +105,11 @@ func (store *Store) UseHooks(hook Hook) {
 	if ok {
 		store.hooks.after = append(store.hooks.after, after)
 	}
+
+	errhook, ok := hook.(ErrorHook)
+	if ok {
+		store.hooks.error = append(store.hooks.error, errhook)
+	}
 }
 
 func (store *Store) dispatchValue(
@@ -141,4 +150,24 @@ func (store *Store) dispatchValue(
 	}
 
 	return nil
+}
+
+// errorHooks runs the error hooks registered with the store
+func (store *Store) errorHooks(
+	ctx context.Context,
+	action Action,
+	e error,
+) {
+
+	for i, hook := range store.hooks.error {
+		err := hook.DispatchError(ctx, action, e)
+		if err != nil {
+			// NOTE(scott): I'm choosing to simply output an error triggered by an
+			// error hook execution because IMO the original error is more important
+			// to be bubbled up the stack and I don't want to introduce another error
+			// type to the API.
+			log.Print(&HookError{Index: i, Hook: hook, Err: err})
+		}
+	}
+
 }

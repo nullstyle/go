@@ -2,6 +2,8 @@ package influx
 
 import (
 	"context"
+	"errors"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -16,9 +18,15 @@ type TestChild struct {
 }
 
 func (state *TestChild) HandleAction(ctx context.Context, action Action) error {
-	switch action.(type) {
+	switch action := action.(type) {
 	case TestAction:
 		state.Called = true
+	case string:
+		switch action {
+		case "boom":
+			log.Println("in boom")
+			return errors.New("boom")
+		}
 	}
 
 	return nil
@@ -26,10 +34,20 @@ func (state *TestChild) HandleAction(ctx context.Context, action Action) error {
 
 type TestHook struct{}
 
+var _ Hooks = &TestHook{}
+var _ Named = &TestHook{}
+
+func (hook *TestHook) Name() string {
+	return "test-hook"
+}
+
 func (hook *TestHook) AfterDispatch(ctx context.Context, action Action) error {
 	return nil
 }
 func (hook *TestHook) BeforeDispatch(ctx context.Context, action Action) error {
+	return nil
+}
+func (hook *TestHook) DispatchError(ctx context.Context, action Action, err error) error {
 	return nil
 }
 
@@ -64,6 +82,3 @@ func baseTest(t *testing.T) (*TestState, *Store) {
 
 	return state, store
 }
-
-// ensure TestHook is comprehensice
-var _ Hooks = &TestHook{}

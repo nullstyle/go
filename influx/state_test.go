@@ -111,6 +111,76 @@ func BenchmarkStore_Dispatch(b *testing.B) {
 	}
 }
 
+func TestStore_Dispatch_ErrorHook(t *testing.T) {
+	t.Run("no error", func(t *testing.T) {
+		_, store := baseTest(t)
+		var called bool
+		store.UseHooks(OnErrorFunc(func(ctx context.Context, action Action, e error) error {
+			called = true
+			return nil
+		}))
+
+		err := store.Dispatch("")
+		if assert.NoError(t, err) {
+			assert.False(t, called, "error fn was called")
+		}
+	})
+
+	t.Run("handler error", func(t *testing.T) {
+		_, store := baseTest(t)
+		var called bool
+		store.UseHooks(OnErrorFunc(func(ctx context.Context, action Action, e error) error {
+			called = true
+			return nil
+		}))
+
+		err := store.Dispatch("boom")
+		assert.Error(t, err)
+		assert.True(t, called, "error fn was not called")
+	})
+
+	t.Run("before hook error", func(t *testing.T) {
+		_, store := baseTest(t)
+		var called bool
+		store.UseHooks(OnErrorFunc(func(ctx context.Context, action Action, e error) error {
+			called = true
+			return nil
+		}))
+
+		store.UseHooks(BeforeDispatchFunc(func(ctx context.Context, action Action) error {
+			return errors.New("kaboom")
+		}))
+
+		err := store.Dispatch("")
+		assert.Error(t, err)
+		// assert.True(t, called, "error fn was not called")
+	})
+
+	t.Run("error hook errors", func(t *testing.T) {
+		_, store := baseTest(t)
+		store.UseHooks(OnErrorFunc(func(ctx context.Context, action Action, e error) error {
+			return errors.New("hook error")
+		}))
+
+		err := store.Dispatch("boom")
+		// TODO
+		assert.Error(t, err)
+	})
+
+	// t.Run("sad path: erroring hook", func(t *testing.T) {
+	// 	_, store := baseTest(t)
+	// 	store.UseHooks(BeforeDispatchFunc(func(ctx context.Context, action Action) error {
+	// 		return errors.New("kaboom")
+	// 	}))
+
+	// 	// check after dispatch is called
+	// 	err := store.Dispatch(struct{}{})
+	// 	if assert.Error(t, err) {
+
+	// 	}
+	// })
+}
+
 func TestStore_Get(t *testing.T) {
 	state, store := baseTest(t)
 	state.Counter = 3
@@ -154,4 +224,5 @@ func TestStore_UseHooks(t *testing.T) {
 	store.UseHooks(hook)
 	assert.Len(t, store.hooks.after, 1)
 	assert.Len(t, store.hooks.before, 1)
+	assert.Len(t, store.hooks.error, 1)
 }
