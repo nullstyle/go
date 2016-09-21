@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/bep/gr"
@@ -47,9 +48,14 @@ func main() {
 		Store: store,
 	})
 
-	store.AfterDispatch(func(store *influx.Store) error {
+	renderer := influx.AfterDispatchFunc(func(
+		ctx context.Context,
+		action influx.Action,
+	) error {
 		log.Println("rendering")
 		ui.Render("app", gr.Props{})
 		return nil
 	})
+
+	store.UseHooks(renderer)
 }
