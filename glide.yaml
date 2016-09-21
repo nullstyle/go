@@ -8,3 +8,4 @@ import:
 - package: github.com/gopherjs/vecty
 - package: github.com/bep/gr
 - package: github.com/shopspring/decimal
+- package: github.com/miolini/datacounter
