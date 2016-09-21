@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -78,6 +79,30 @@ func TestStore_Dispatch_BeforeHook(t *testing.T) {
 
 		}
 	})
+}
+
+func TestStore_Dispatch_Context(t *testing.T) {
+	_, store := baseTest(t)
+
+	check := func(ctx context.Context, action Action) error {
+		_, err := FromContext(ctx)
+		assert.NoError(t, err)
+		return nil
+	}
+
+	store.UseHooks(BeforeDispatchFunc(check))
+	store.UseHooks(AfterDispatchFunc(check))
+
+	// TODO: refactor test fixtures to allow us to report what phase a failure was
+	// triggered in
+
+	// ensure context has store available before, after dispatch
+	err := store.Dispatch("")
+	assert.NoError(t, err)
+
+	// ensure context is available during dispatch
+	err = store.Dispatch("check_store")
+	assert.NoError(t, err)
 }
 
 func BenchmarkStore_Dispatch(b *testing.B) {
@@ -204,7 +229,9 @@ func TestStore_Save(t *testing.T) {
 	require.NoError(t, err)
 
 	var out bytes.Buffer
+
 	err = store.Save(&out)
+
 	if assert.NoError(t, err) {
 		var snap Snapshot
 		var loaded TestState
@@ -212,10 +239,27 @@ func TestStore_Save(t *testing.T) {
 		require.NoError(t, err)
 		err = json.Unmarshal(snap.State, &loaded)
 		require.NoError(t, err)
-
 		assert.Equal(t, 3, loaded.Counter)
 	}
 
+}
+
+func TestStore_TakeSnapshot(t *testing.T) {
+	state := TestState{
+		Counter: 3,
+	}
+	store, err := New(&state)
+	require.NoError(t, err)
+
+	snap, err := store.TakeSnapshot()
+	if assert.NoError(t, err) {
+		assert.True(t, snap.CreatedAt != time.Time{}, "CreatedAt isn't populated")
+
+		var loaded TestState
+		err := json.Unmarshal(snap.State, &loaded)
+		assert.NoError(t, err)
+		assert.Equal(t, 3, loaded.Counter)
+	}
 }
 
 func TestStore_UseHooks(t *testing.T) {

@@ -1,6 +1,7 @@
 package influx
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"io"
@@ -19,7 +20,7 @@ func (store *Store) Dispatch(action Action) error {
 
 	// create the dispatch context
 	// TODO: probably want to add a configurable deadline or timeout here
-	ctx := context.TODO()
+	ctx := Context(context.Background(), store)
 
 	// run the before dispatch hooks
 	for i, hook := range store.hooks.before {
@@ -73,21 +74,33 @@ func (store *Store) Get(dest interface{}) error {
 
 // Save writes the state to w
 func (store *Store) Save(w io.Writer) error {
-	snapshot := struct {
-		CreatedAt time.Time
-		State     interface{}
-	}{
-		CreatedAt: time.Now(),
-		State:     store.state,
+	snapshot, err := store.TakeSnapshot()
+	if err != nil {
+		return errors.Wrap(err, "take snapshot failed")
 	}
 
 	enc := json.NewEncoder(w)
-	err := enc.Encode(snapshot)
+	err = enc.Encode(&snapshot)
 	if err != nil {
 		return errors.Wrap(err, "encode snapshot failed")
 	}
 
 	return nil
+}
+
+// TakeSnapshot serializes the current state into a new snapshot
+func (store *Store) TakeSnapshot() (Snapshot, error) {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	err := enc.Encode(store.state)
+	if err != nil {
+		return Snapshot{}, errors.Wrap(err, "encode state failed")
+	}
+
+	return Snapshot{
+		CreatedAt: time.Now(),
+		State:     json.RawMessage(buf.Bytes()),
+	}, nil
 }
 
 // Unwrap returns the raw state value managed by this store.  Use with caution.

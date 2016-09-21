@@ -22,6 +22,9 @@ func (state *TestChild) HandleAction(ctx context.Context, action Action) error {
 		state.Called = true
 	case string:
 		switch action {
+		case "check_store":
+			_, err := FromContext(ctx)
+			return err
 		case "boom":
 			return errors.New("boom")
 		}
