@@ -28,14 +28,6 @@ type AfterHook interface {
 	AfterDispatch(context.Context, Action) error
 }
 
-// ActionError represents an error triggered during the application of an action
-// to a store.
-type ActionError struct {
-	Action Action
-	Store  *Store
-	Cause  error
-}
-
 type BeforeFunc func(context.Context, Action) error
 
 // BeforeHook represents a hook function that is triggered at the beginning of
@@ -62,13 +54,6 @@ type Handler interface {
 // provided as a Hook should implement one or more of the hook interfaces.  See
 // the "Hooks" type for a list of available hooks.
 type Hook interface{}
-
-// HookError represents an error that occurred while running a hook function
-type HookError struct {
-	Index int
-	Hook  Hook
-	Err   error
-}
 
 // Hooks represents a type that implements all the possible influx hook
 // interfaces.  It's never used directly, but defined here to document the

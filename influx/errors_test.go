@@ -4,18 +4,26 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/nullstyle/go/test"
 )
 
-func TestError(t *testing.T) {
-	cases := []struct {
-		Name     string
-		Error    HookError
-		Expected string
-	}{
+func TestActionError(t *testing.T) {
+	test.Errors(t, []test.ErrorCase{
 		{
-			"index",
-			HookError{
+			"simple",
+			&ActionError{
+				Err: errors.New("boom"),
+			},
+			"action error: boom",
+		},
+	})
+}
+
+func TestHookError(t *testing.T) {
+	test.Errors(t, []test.ErrorCase{
+		{
+			"hook: index-based",
+			&HookError{
 				Index: 1,
 				Err:   errors.New("boom"),
 				Hook:  struct{}{},
@@ -24,7 +32,7 @@ func TestError(t *testing.T) {
 		},
 		{
 			"named",
-			HookError{
+			&HookError{
 				Index: 1,
 				Err:   errors.New("boom"),
 				Hook:  &TestHook{},
@@ -33,17 +41,11 @@ func TestError(t *testing.T) {
 		},
 		{
 			"nil err",
-			HookError{
+			&HookError{
 				Index: 1,
 				Hook:  &TestHook{},
 			},
 			"hook `test-hook` failed: %!s(<nil>)",
 		},
-	}
-
-	for _, kase := range cases {
-		t.Run(kase.Name, func(t *testing.T) {
-			assert.Equal(t, kase.Expected, kase.Error.Error())
-		})
-	}
+	})
 }

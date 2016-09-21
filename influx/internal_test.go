@@ -3,7 +3,6 @@ package influx
 import (
 	"context"
 	"errors"
-	"log"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -24,7 +23,6 @@ func (state *TestChild) HandleAction(ctx context.Context, action Action) error {
 	case string:
 		switch action {
 		case "boom":
-			log.Println("in boom")
 			return errors.New("boom")
 		}
 	}

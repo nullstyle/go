@@ -131,7 +131,7 @@ func (store *Store) dispatchValue(
 			return &ActionError{
 				Action: action,
 				Store:  store,
-				Cause:  err,
+				Err:    err,
 			}
 		}
 	}
