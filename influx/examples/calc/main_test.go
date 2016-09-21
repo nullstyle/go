@@ -66,9 +66,10 @@ func TestCalculator(t *testing.T) {
 			}
 
 			// check result
+			actual := c.Display()
 			assert.Equal(t,
-				kase.Expected, c.CurrentNumber,
-				"bad: %s != %s", kase.Name, c.CurrentNumber,
+				kase.Expected, actual,
+				"bad: %s != %s", kase.Name, actual,
 			)
 		})
 	}

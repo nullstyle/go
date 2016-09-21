@@ -95,8 +95,8 @@ type PlusMinus struct{}
 // state of this example app.
 type Calculator struct {
 	QueuedOperator Operator
-	CurrentNumber  string
-	SavedNumber    string
+	Register       string
+	Result         string
 	ShowingResult  bool
 }
 
@@ -108,50 +108,87 @@ func (c *Calculator) HandleAction(
 
 	switch action := action.(type) {
 	case Clear:
-		c.CurrentNumber = ""
+		c.Register = ""
 		c.ShowingResult = false
 	case Digit:
 		if c.ShowingResult {
 			c.ShowingResult = false
-			c.SavedNumber = c.CurrentNumber
-			c.CurrentNumber = ""
 		}
 
-		c.CurrentNumber = c.CurrentNumber + action.digit
+		c.Register = c.Register + action.digit
 	case Equals:
 		if c.QueuedOperator == nil {
 			return nil
 		}
 
-		r, err := decimal.NewFromString(c.CurrentNumber)
+		err := c.calculate()
 		if err != nil {
-			return errors.Wrap(err, "parse right failed")
+			return errors.Wrap(err, "calculate failed")
 		}
-
-		l, err := decimal.NewFromString(c.SavedNumber)
-		if err != nil {
-			return errors.Wrap(err, "parse left failed")
-		}
-		ret := c.QueuedOperator.operate(l, r)
-
-		c.CurrentNumber = ret.String()
-		c.ShowingResult = true
 	case Operator:
+		if c.QueuedOperator != nil {
+			err := c.calculate()
+			if err != nil {
+				return errors.Wrap(err, "calculate failed")
+			}
+			c.Register = ""
+		} else {
+			c.Result = c.Register
+			c.Register = ""
+		}
+
 		c.QueuedOperator = action
-		c.SavedNumber = c.CurrentNumber
-		c.CurrentNumber = ""
-		c.ShowingResult = false
 	case PlusMinus:
-		cur, err := decimal.NewFromString(c.CurrentNumber)
+		var cur string
+		if c.ShowingResult {
+			cur = c.Result
+		} else {
+			cur = c.Register
+		}
+
+		val, err := decimal.NewFromString(cur)
 		if err != nil {
 			return errors.Wrap(err, "parse current failed")
 		}
 
-		result := cur.Mul(negOne)
-		c.CurrentNumber = result.String()
-		c.ShowingResult = false
+		result := val.Mul(negOne)
+		c.Register = result.String()
+
+		if c.ShowingResult {
+			c.Result = ""
+			c.ShowingResult = false
+		}
 	}
 
+	return nil
+}
+
+// Display returns the value that is on the calculator's display
+func (c *Calculator) Display() string {
+	if c.ShowingResult {
+		return c.Result
+	}
+
+	return c.Register
+}
+
+func (c *Calculator) calculate() error {
+	r, err := decimal.NewFromString(c.Register)
+	if err != nil {
+		return errors.Wrap(err, "parse register failed")
+	}
+
+	if c.Result == "" {
+		c.Result = "0"
+	}
+
+	l, err := decimal.NewFromString(c.Result)
+	if err != nil {
+		return errors.Wrap(err, "parse result failed")
+	}
+	ret := c.QueuedOperator.operate(l, r)
+	c.Result = ret.String()
+	c.ShowingResult = true
 	return nil
 }
 
