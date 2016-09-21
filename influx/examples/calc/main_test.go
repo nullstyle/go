@@ -41,13 +41,26 @@ func TestCalculator(t *testing.T) {
 			Expected: "35",
 		},
 
-		// multi ops
 		{
-			Name: "2+2+2",
+			Name: "multiple operators: 2+2+2",
 			Actions: []influx.Action{
 				Two, Add{}, Two, Add{}, Two, Equals{},
 			},
 			Expected: "6",
+		},
+		{
+			Name: "=",
+			Actions: []influx.Action{
+				Equals{},
+			},
+			Expected: "",
+		},
+		{
+			Name: "1=",
+			Actions: []influx.Action{
+				One, Equals{},
+			},
+			Expected: "1",
 		},
 	}
 
