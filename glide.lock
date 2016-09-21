@@ -1,8 +1,12 @@
-hash: ce967fb17755c5408b91c6507a1c3f21af63ba0e644948f37308d88bbe45afe7
-updated: 2016-09-19T20:59:32.096776389-07:00
+hash: 6998e132f756b3fcd1ec5b4346d3d5039fa57b8d8b9e8e48821bf5a8d2087f62
+updated: 2016-09-20T16:43:56.532883093-07:00
 imports:
 - name: github.com/bep/gr
   version: 4dcf98465163b2d4881cee1fc0a2897a0c6cca1c
+  subpackages:
+  - el
+  - evt
+  - support
 - name: github.com/davecgh/go-spew
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
@@ -48,6 +52,8 @@ imports:
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
+- name: github.com/shopspring/decimal
+  version: d6f52241f332c63811249bd79a522406bea1a7c9
 - name: github.com/spf13/afero
   version: 20500e2abd0d1f4564a499e83d11d6c73cd58c27
   subpackages:

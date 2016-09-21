@@ -7,3 +7,4 @@ import:
 - package: github.com/spf13/afero
 - package: github.com/gopherjs/vecty
 - package: github.com/bep/gr
+- package: github.com/shopspring/decimal
