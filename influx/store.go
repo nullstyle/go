@@ -90,6 +90,14 @@ func (store *Store) Save(w io.Writer) error {
 	return nil
 }
 
+// Unwrap returns the raw state value managed by this store.  Use with caution.
+// TODO: add a vet check that ensures Unwrap is only used from test files.
+func (store *Store) Unwrap() interface{} {
+	store.lock.Lock()
+	defer store.lock.Unlock()
+	return store.state
+}
+
 // UseHooks adds a function that will be called after each successful
 // dispatch of an action against the store
 func (store *Store) UseHooks(hook Hook) {

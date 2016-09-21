@@ -38,6 +38,15 @@ type State struct {
 	Counter int
 }
 
+// Do runs the provided actions against the store, ensuring none of them cause
+// dispatch to return an error.  Useful for setting up a test scenario.
+func Do(t *testing.T, store *influx.Store, actions ...influx.Action) {
+	for i, a := range actions {
+		err := store.Dispatch(a)
+		require.NoError(t, err, "action[%d] failed", i)
+	}
+}
+
 // Hook runs the provided hook test cases.  This function runs through each
 // provided case and: creates a new store, installs the hook, dispatches the
 // actions, then calls the case's test function to assert on state.  Errors
@@ -67,15 +76,18 @@ func Hook(t *testing.T, cases []HookCase) {
 }
 
 // New returns a new instance of the influx test store
-func New(t *testing.T) *influx.Store {
+func New(t *testing.T, actions ...influx.Action) *influx.Store {
 	var state State
-	return new(t, &state)
+	return new(t, &state, actions)
 }
 
-func new(t *testing.T, state *State) *influx.Store {
+func new(t *testing.T, state *State, actions []influx.Action) *influx.Store {
 	store, err := influx.New(state)
 	require.NoError(t, err)
 	store.UseHooks(&afterHook{})
 	store.UseHooks(&beforeHook{})
+
+	Do(t, store, actions...)
+
 	return store
 }
