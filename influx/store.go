@@ -21,6 +21,17 @@ func (store *Store) Dispatch(action Action) error {
 	return store.dispatch(action)
 }
 
+// Done returns a channel that closes when all running tasks to complete.
+func (store *Store) Done() <-chan struct{} {
+	done := make(chan struct{})
+	go func() {
+		store.tasks.Wait()
+		close(done)
+	}()
+
+	return done
+}
+
 // Go runs the provided function in the background using a new goproc. calling
 // Wait() on a store will block until all outstanding background tasks are
 // complete.
@@ -117,11 +128,6 @@ func (store *Store) UseHooks(hook Hook) {
 	if ok {
 		store.hooks.error = append(store.hooks.error, errhook)
 	}
-}
-
-// Wait for all running tasks to complete.
-func (store *Store) Wait() {
-	store.tasks.Wait()
 }
 
 func (store *Store) dispatch(action Action) error {

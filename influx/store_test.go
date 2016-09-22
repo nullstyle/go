@@ -193,6 +193,35 @@ func TestStore_Dispatch_ErrorHook(t *testing.T) {
 	})
 }
 
+func TestStore_Go(t *testing.T) {
+	_, store := baseTest(t)
+	trigger := make(chan int)
+	output := make(chan int, 1)
+
+	// it runs in the background
+	store.Go(func() {
+		in := <-trigger
+		output <- in
+		close(output)
+	})
+
+	select {
+	case <-output:
+		assert.FailNow(t, "read from output channel before trigger")
+	default:
+		t.Log("good: still waiting on output")
+	}
+
+	trigger <- 4
+	<-store.Done()
+	select {
+	case out := <-output:
+		assert.Equal(t, 4, out)
+	default:
+		assert.FailNow(t, "output wasn't triggered")
+	}
+}
+
 func TestStore_Get(t *testing.T) {
 	state, store := baseTest(t)
 	state.Counter = 3
