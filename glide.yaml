@@ -10,3 +10,5 @@ import:
 - package: github.com/shopspring/decimal
 - package: github.com/miolini/datacounter
 - package: github.com/stellar/go
+  subpackages:
+  - '...'

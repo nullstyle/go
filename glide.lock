@@ -1,20 +1,38 @@
-hash: c80677d6c698deec889b880fd2dffaeff5225209a3d271d8d1ce2d009805fe57
-updated: 2016-09-21T19:06:57.408260955-07:00
+hash: 8d7bffd2ee34ebb4bba1620e2239dc3622c4600883a2f68009067ceb612b33d9
+updated: 2016-09-21T19:18:19.271584678-07:00
 imports:
+- name: github.com/ajg/form
+  version: 523a5da1a92f01b01f840b61689c0340a0243532
 - name: github.com/bep/gr
   version: 4dcf98465163b2d4881cee1fc0a2897a0c6cca1c
   subpackages:
   - el
   - evt
   - support
+- name: github.com/certifi/gocertifi
+  version: ec89d50f00d39494f5b3ec5cf2fe75c53467a937
 - name: github.com/davecgh/go-spew
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
   - spew
+- name: github.com/fatih/structs
+  version: dc3312cb1a4513a366c4c9e622ad55c32df12ed3
 - name: github.com/fsnotify/fsnotify
   version: f12c6236fe7b5cf6bcf30e5935d08cb079d78334
+- name: github.com/gavv/gojsondiff
+  version: 36046c6e558e7f854ebd3fd97d1e9812ebe8709b
+  subpackages:
+  - formatter
+- name: github.com/gavv/monotime
+  version: 259cd7b345f5aa080eff16f21d7866ef7dea9528
 - name: github.com/gedex/inflector
   version: 91797f1712fd58f224781be1080b8613d096187e
+- name: github.com/getsentry/raven-go
+  version: 379f8d0a68ca237cf8893a1cdfd4f574125e2c51
+- name: github.com/google/go-querystring
+  version: 9235644dd9e52eeae6fa48efd539fdc351a0af53
+  subpackages:
+  - query
 - name: github.com/gopherjs/gopherjs
   version: f2fc182abb28925c7aa40502db839c6ebd7f7171
   subpackages:
@@ -32,8 +50,22 @@ imports:
   - hcl/strconv
   - json/scanner
   - json/token
+- name: github.com/imkira/go-interpol
+  version: 5accad8134979a6ac504d456a6c7f1c53da237ca
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+- name: github.com/jarcoal/httpmock
+  version: 145b10d659265440f062c31ea15326166bae56ee
+- name: github.com/klauspost/compress
+  version: d0763f13d86e630f5d3ea9fa848a6ecc68255297
+  subpackages:
+  - flate
+  - gzip
+  - zlib
+- name: github.com/klauspost/cpuid
+  version: 09cded8978dc9e80714c4d85b0322337b0a1e5e0
+- name: github.com/klauspost/crc32
+  version: 19b0b332c9e4516a6370a0456e6182c3b5036720
 - name: github.com/kr/fs
   version: 2788f0dbd16903de03cb8186e5c7d97b69ad387b
 - name: github.com/magiconair/properties
@@ -42,6 +74,8 @@ imports:
   version: 2fb1a1d5c3907155bbff63ad8b8a146ced61eba6
 - name: github.com/mitchellh/mapstructure
   version: ca63d7c062ee3c9f34db231e352b60012b4fd0c1
+- name: github.com/moul/http2curl
+  version: b1479103caacaa39319f75e7f57fc545287fca0d
 - name: github.com/pelletier/go-buffruneio
   version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
 - name: github.com/pelletier/go-toml
@@ -54,6 +88,10 @@ imports:
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
+- name: github.com/sergi/go-diff
+  version: 97b2266dfe4bd4ea1b81a463322f04f8b724801e
+  subpackages:
+  - diffmatchpatch
 - name: github.com/shopspring/decimal
   version: d6f52241f332c63811249bd79a522406bea1a7c9
 - name: github.com/spf13/afero
@@ -73,6 +111,10 @@ imports:
   version: 16990631d4aa7e38f73dbbbf37fa13e67c648531
 - name: github.com/stellar/go
   version: ef772e16588677785ae5bfd2cf0827f1719101be
+  subpackages:
+  - '...'
+  - support/http/httptest
+  - support/errors
 - name: github.com/stretchr/objx
   version: cbeaeb16a013161a98496fad62933b1d21786672
 - name: github.com/stretchr/testify
@@ -81,6 +123,22 @@ imports:
   - mock
   - require
   - assert
+- name: github.com/valyala/bytebufferpool
+  version: e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7
+- name: github.com/valyala/fasthttp
+  version: a52a42acd6b1d8d58704dd485f410665fa02c1e4
+  subpackages:
+  - fasthttputil
+- name: github.com/xeipuuv/gojsonpointer
+  version: e0fe6f68307607d540ed8eac07a342c33fa1b54a
+- name: github.com/xeipuuv/gojsonreference
+  version: e02fc20de94c78484cd5ffb007f8af96be030a45
+- name: github.com/xeipuuv/gojsonschema
+  version: 00f9fafb54d2244d291b86ab63d12c38bd5c3886
+- name: github.com/yalp/jsonpath
+  version: 31a79c7593bb93eb10b163650d4a3e6ca190e4dc
+- name: github.com/yudai/golcs
+  version: d1c525dea8ce39ea9a783d33cf08932305373f2c
 - name: golang.org/x/crypto
   version: 81372b2fc2f10bef2a7f338da115c315a56b2726
   subpackages:
@@ -88,6 +146,10 @@ imports:
   - curve25519
   - ed25519
   - ed25519/internal/edwards25519
+- name: golang.org/x/net
+  version: 6d3beaea10370160dea67f5c9327ed791afd5389
+  subpackages:
+  - publicsuffix
 - name: golang.org/x/sys
   version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
   subpackages:
@@ -97,6 +159,8 @@ imports:
   subpackages:
   - transform
   - unicode/norm
+- name: gopkg.in/gavv/httpexpect.v1
+  version: 445f10d0ea3df01f78f350cbb01dd4a360d56d93
 - name: gopkg.in/yaml.v2
   version: 31c299268d302dd0aa9a0dcf765a3d58971ac83f
 devImports: []
