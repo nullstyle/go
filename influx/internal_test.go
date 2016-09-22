@@ -8,6 +8,38 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type BreakAtLoadTest struct {
+}
+
+func (state *BreakAtLoadTest) HandleAction(
+	ctx context.Context,
+	action Action,
+) error {
+	switch action {
+	case StateLoaded:
+		return errors.New("busted")
+	}
+
+	return errors.Errorf("unexpected message dispatched: %s", action)
+}
+
+type BreakAtWillSaveTest struct {
+}
+
+func (state *BreakAtWillSaveTest) HandleAction(
+	ctx context.Context,
+	action Action,
+) error {
+	switch action {
+	case StateLoaded:
+		return nil
+	case StateWillSave:
+		return errors.New("busted")
+	}
+
+	return errors.Errorf("unexpected message dispatched: %s", action)
+}
+
 type LifecycleTest struct {
 	LoadWasCalled     bool
 	WillSaveWasCalled bool

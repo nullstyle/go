@@ -52,6 +52,10 @@ func (store *Store) Get(dest interface{}) error {
 		return errors.New("incorrect dest type")
 	}
 
+	// NOTE(scott): I can't actually figure out a way to test this, because in
+	// every test scenario I can think of, the "AssignableTo" clause above will
+	// catch the failure first.  The following check is left for defense against
+	// inadvertant code or behavior changes.
 	destve := destv.Elem()
 	if !destve.CanSet() {
 		return errors.New("unsettable dest")
@@ -70,6 +74,9 @@ func (store *Store) Save(w io.Writer) error {
 
 	enc := json.NewEncoder(w)
 	err = enc.Encode(&snapshot)
+	// NOTE(scott) 2016-09-22: there is presently no way to test this code path
+	// below, as a successful snapshot is guaranteed to be encodable to JSON, at
+	// present.
 	if err != nil {
 		return errors.Wrap(err, "encode snapshot failed")
 	}

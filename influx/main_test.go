@@ -28,6 +28,12 @@ func TestFromContext(t *testing.T) {
 	// sad path
 	found, err = FromContext(context.Background())
 	assert.Error(t, err)
+
+	// broken context: not a store at the store key
+	ctx = context.WithValue(context.Background(), &contextKeys.store, 7)
+	found, err = FromContext(ctx)
+	assert.Error(t, err)
+
 }
 
 func TestNew(t *testing.T) {
@@ -50,4 +56,9 @@ func TestNew(t *testing.T) {
 	assert.Panics(t, func() {
 		New(TestState{})
 	})
+
+	// returns an error if state returns error on initial StateLoaded dispatch
+	var busted BreakAtLoadTest
+	_, err := New(&busted)
+	assert.Error(t, err)
 }

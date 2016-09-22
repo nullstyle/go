@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"testing"
 	"time"
 
@@ -281,6 +282,16 @@ func TestStore_Save(t *testing.T) {
 		assert.Equal(t, 3, loaded.Counter)
 	}
 
+	// sad path: state fails to serialize as JSON
+	chanState := make(chan int)
+	store, err = New(&chanState)
+	require.NoError(t, err)
+
+	err = store.Save(ioutil.Discard)
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "take snapshot failed")
+	}
+
 }
 
 func TestStore_TakeSnapshot(t *testing.T) {
@@ -299,6 +310,31 @@ func TestStore_TakeSnapshot(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 3, loaded.Counter)
 	}
+
+	// sad path: StateWillSave triggers an error
+	var busted BreakAtWillSaveTest
+	store, err = New(&busted)
+	require.NoError(t, err)
+
+	_, err = store.TakeSnapshot()
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "StateWillSave dispatch failed")
+	}
+
+	// sad path: state fails to serialize as JSON
+	chanState := make(chan int)
+	store, err = New(&chanState)
+	require.NoError(t, err)
+
+	_, err = store.TakeSnapshot()
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "encode state failed")
+	}
+}
+
+func TestStore_Unwrap(t *testing.T) {
+	state, store := baseTest(t)
+	assert.Equal(t, state, store.Unwrap())
 }
 
 func TestStore_UseHooks(t *testing.T) {
