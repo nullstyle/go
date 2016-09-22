@@ -2,6 +2,7 @@ package influx
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -61,4 +62,29 @@ func TestNew(t *testing.T) {
 	var busted BreakAtLoadTest
 	_, err := New(&busted)
 	assert.Error(t, err)
+}
+
+func TestNewRequest(t *testing.T) {
+	// increments id
+	r1, _ := NewRequest()
+	r2, _ := NewRequest()
+	r3, _ := NewRequest()
+
+	assert.Equal(t, r1.ID+1, r2.ID)
+	assert.Equal(t, r2.ID+1, r3.ID)
+
+	// doesn't race
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		NewRequest()
+		wg.Done()
+	}()
+
+	go func() {
+		NewRequest()
+		wg.Done()
+	}()
+	wg.Wait()
 }

@@ -146,3 +146,16 @@ func New(state interface{}) (*Store, error) {
 
 	return store, nil
 }
+
+func NewRequest() (Request, Result) {
+	requestLock.Lock()
+	id := nextRequest
+	nextRequest++
+	requestLock.Unlock()
+
+	req := Request{ID: id}
+	res := Result{}
+	res.start(req)
+
+	return Request{ID: id}, res
+}

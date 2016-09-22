@@ -3,26 +3,33 @@ package influx
 import (
 	"context"
 	"reflect"
+	"sync"
 )
-
-type contextKey int
-
-// contextKeys holds the context keys for this package
-var contextKeys struct {
-	store contextKey
-}
-
-// lifecycleKeys represents one of the influx lifecycle events
-type lifecycleKey int
 
 const (
 	stateLoaded lifecycleKey = iota
 	stateWillSave
 )
 
+// contextKeys holds the context keys for this package
+var contextKeys struct {
+	store contextKey
+}
+
 // handlert is the cached reflect.Type of the influx handler type. Used during
 // dispatch to see if a given value or field implements Handler.
 var handlert = reflect.TypeOf((*Handler)(nil)).Elem()
+
+// request system vars
+var (
+	requestLock sync.Mutex
+	nextRequest int
+)
+
+type contextKey int
+
+// lifecycleKeys represents one of the influx lifecycle events
+type lifecycleKey int
 
 type afterFunc struct {
 	Fn AfterFunc
