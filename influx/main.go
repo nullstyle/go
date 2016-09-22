@@ -82,6 +82,7 @@ type Snapshot struct {
 // references in your state object, as infinite recursion will occur.
 type Store struct {
 	lock  sync.Mutex
+	tasks sync.WaitGroup
 	state interface{}
 	hooks struct {
 		before []BeforeHook

@@ -21,6 +21,17 @@ func (store *Store) Dispatch(action Action) error {
 	return store.dispatch(action)
 }
 
+// Go runs the provided function in the background using a new goproc. calling
+// Wait() on a store will block until all outstanding background tasks are
+// complete.
+func (store *Store) Go(fn func()) {
+	store.tasks.Add(1)
+	go func() {
+		fn()
+		store.tasks.Done()
+	}()
+}
+
 // Get loads dest with the current state
 func (store *Store) Get(dest interface{}) error {
 	destv := reflect.ValueOf(dest)
@@ -106,6 +117,11 @@ func (store *Store) UseHooks(hook Hook) {
 	if ok {
 		store.hooks.error = append(store.hooks.error, errhook)
 	}
+}
+
+// Wait for all running tasks to complete.
+func (store *Store) Wait() {
+	store.tasks.Wait()
 }
 
 func (store *Store) dispatch(action Action) error {
