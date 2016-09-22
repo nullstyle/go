@@ -16,6 +16,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+//go:generate mockery -name Handler -output ./influxtest -case=underscore -outpkg=influxtest
+
 // Action represents a type that can affect an influx.State.
 type Action interface {
 }

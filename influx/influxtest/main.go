@@ -91,3 +91,5 @@ func new(t *testing.T, state *State, actions []influx.Action) *influx.Store {
 
 	return store
 }
+
+var _ influx.Handler = &Handler{}
