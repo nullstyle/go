@@ -9,3 +9,4 @@ import:
 - package: github.com/bep/gr
 - package: github.com/shopspring/decimal
 - package: github.com/miolini/datacounter
+- package: github.com/stellar/go
