@@ -81,7 +81,19 @@ func New(t *testing.T, actions ...influx.Action) *influx.Store {
 	return new(t, &state, actions)
 }
 
-func new(t *testing.T, state *State, actions []influx.Action) *influx.Store {
+// NewFromState simplifies creating a store with a custom state in a testing
+// context.
+func NewFromState(
+	t *testing.T,
+	state interface{},
+	actions ...influx.Action,
+) *influx.Store {
+	store, err := influx.New(state)
+	require.NoError(t, err)
+	return store
+}
+
+func new(t *testing.T, state interface{}, actions []influx.Action) *influx.Store {
 	store, err := influx.New(state)
 	require.NoError(t, err)
 	store.UseHooks(&afterHook{})
