@@ -12,6 +12,14 @@ var contextKeys struct {
 	store contextKey
 }
 
+// lifecycleKeys represents one of the influx lifecycle events
+type lifecycleKey int
+
+const (
+	stateLoaded lifecycleKey = iota
+	stateWillSave
+)
+
 // handlert is the cached reflect.Type of the influx handler type. Used during
 // dispatch to see if a given value or field implements Handler.
 var handlert = reflect.TypeOf((*Handler)(nil)).Elem()

@@ -136,7 +136,10 @@ func New(state interface{}) (*Store, error) {
 		state: state,
 	}
 
-	// TODO: get initial action plan, cache it
+	err := store.init()
+	if err != nil {
+		return nil, errors.Wrap(err, "store initialization failed")
+	}
 
 	return store, nil
 }

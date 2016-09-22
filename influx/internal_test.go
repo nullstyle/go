@@ -2,11 +2,32 @@ package influx
 
 import (
 	"context"
-	"errors"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
+
+type LifecycleTest struct {
+	LoadWasCalled     bool
+	WillSaveWasCalled bool
+}
+
+func (state *LifecycleTest) HandleAction(
+	ctx context.Context,
+	action Action,
+) error {
+	switch action {
+	case StateLoaded:
+		state.LoadWasCalled = true
+		return nil
+	case StateWillSave:
+		state.WillSaveWasCalled = true
+		return nil
+	}
+
+	return errors.Errorf("unexpected message dispatched: %s", action)
+}
 
 type TestAction struct {
 	Amount int

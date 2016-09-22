@@ -18,40 +18,7 @@ func (store *Store) Dispatch(action Action) error {
 	store.lock.Lock()
 	defer store.lock.Unlock()
 
-	// create the dispatch context
-	// TODO: probably want to add a configurable deadline or timeout here
-	ctx := Context(context.Background(), store)
-
-	// run the before dispatch hooks
-	for i, hook := range store.hooks.before {
-		err := hook.BeforeDispatch(ctx, action)
-		if err != nil {
-			store.errorHooks(ctx, store, err)
-			return &HookError{Index: i, Hook: hook, Err: err}
-		}
-	}
-
-	// TODO: run action middleware to mutate action
-	// TODO: plan the dispatch
-
-	// run the dispatch
-	statev := reflect.ValueOf(store.state).Elem()
-	err := store.dispatchValue(ctx, statev, action)
-	if err != nil {
-		store.errorHooks(ctx, store, err)
-		return err
-	}
-
-	// run the after dispatch hooks
-	for i, hook := range store.hooks.after {
-		err := hook.AfterDispatch(ctx, action)
-		if err != nil {
-			store.errorHooks(ctx, store, err)
-			return &HookError{Index: i, Hook: hook, Err: err}
-		}
-	}
-
-	return nil
+	return store.dispatch(action)
 }
 
 // Get loads dest with the current state
@@ -90,9 +57,17 @@ func (store *Store) Save(w io.Writer) error {
 
 // TakeSnapshot serializes the current state into a new snapshot
 func (store *Store) TakeSnapshot() (Snapshot, error) {
+	store.lock.Lock()
+	defer store.lock.Unlock()
+
+	err := store.dispatch(StateWillSave)
+	if err != nil {
+		return Snapshot{}, errors.Wrap(err, "StateWillSave dispatch failed")
+	}
+
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
-	err := enc.Encode(store.state)
+	err = enc.Encode(store.state)
 	if err != nil {
 		return Snapshot{}, errors.Wrap(err, "encode state failed")
 	}
@@ -131,6 +106,43 @@ func (store *Store) UseHooks(hook Hook) {
 	if ok {
 		store.hooks.error = append(store.hooks.error, errhook)
 	}
+}
+
+func (store *Store) dispatch(action Action) error {
+	// create the dispatch context
+	// TODO: probably want to add a configurable deadline or timeout here
+	ctx := Context(context.Background(), store)
+
+	// run the before dispatch hooks
+	for i, hook := range store.hooks.before {
+		err := hook.BeforeDispatch(ctx, action)
+		if err != nil {
+			store.errorHooks(ctx, store, err)
+			return &HookError{Index: i, Hook: hook, Err: err}
+		}
+	}
+
+	// TODO: run action middleware to mutate action
+	// TODO: plan the dispatch
+
+	// run the dispatch
+	statev := reflect.ValueOf(store.state).Elem()
+	err := store.dispatchValue(ctx, statev, action)
+	if err != nil {
+		store.errorHooks(ctx, store, err)
+		return err
+	}
+
+	// run the after dispatch hooks
+	for i, hook := range store.hooks.after {
+		err := hook.AfterDispatch(ctx, action)
+		if err != nil {
+			store.errorHooks(ctx, store, err)
+			return &HookError{Index: i, Hook: hook, Err: err}
+		}
+	}
+
+	return nil
 }
 
 func (store *Store) dispatchValue(
@@ -191,4 +203,17 @@ func (store *Store) errorHooks(
 		}
 	}
 
+}
+
+// init initializes the store and dispatches the loaded lifecycle event
+func (store *Store) init() error {
+
+	// TODO: get initial action plan, cache it
+
+	err := store.Dispatch(StateLoaded)
+	if err != nil {
+		return errors.Wrap(err, "StateLoaded failed")
+	}
+
+	return nil
 }

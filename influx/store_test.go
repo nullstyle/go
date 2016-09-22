@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -219,6 +219,29 @@ func TestStore_Get(t *testing.T) {
 	// unsettable
 	err = store.Get(&TestState{})
 	assert.Error(t, err)
+}
+
+func TestStore_LifecycleEvents(t *testing.T) {
+	// wish we could use influxtext here.
+	// just a simple smoke test for now.
+
+	var state LifecycleTest
+
+	store, err := New(&state)
+	require.NoError(t, err)
+	assert.True(t,
+		state.LoadWasCalled,
+		"StateLoaded wasn't called at store creation")
+	assert.False(t,
+		state.WillSaveWasCalled,
+		"WillSaveWasCalled was called early")
+
+	_, err = store.TakeSnapshot()
+	require.NoError(t, err)
+	assert.True(t,
+		state.WillSaveWasCalled,
+		"StateWillSave wasn't called at save")
+
 }
 
 func TestStore_Save(t *testing.T) {
