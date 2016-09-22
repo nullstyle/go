@@ -24,6 +24,13 @@ type App struct {
 	WindowWidth  int
 	WindowHeight int
 	OnReady      func(*App)
+
+	// IndexStylesheets is the set of stylesheets to load from the html template
+	IndexStylesheets []string
+
+	// IndexScripts is a set of javascript files to load in the html template
+	// prior to loading the compiled application
+	IndexScripts []string
 }
 
 // On registers fn to be called whenever the global event provided is triggered.

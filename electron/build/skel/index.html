@@ -1,7 +1,14 @@
 <!DOCTYPE html>
 <html>
+<head>
+  <title>{{.Title}}</title>
 
+  {{range .IndexStylesheets}}
+  <link rel="stylesheet" href="{{ . }}">{{end}}
+</head>
 <body>
+    {{range .IndexScripts}}
+    <script type="text/javascript" src="{{ . }}"></script>{{end}}
     <script type="text/javascript" src="browser.js"></script>
 </body>
 
