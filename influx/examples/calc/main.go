@@ -75,6 +75,8 @@ var (
 	Eight = Digit{"8"}
 	// Nine represents the action of pressing the 9 key
 	Nine = Digit{"9"}
+	// Dot represents the action of pressing the decimal point key
+	Dot = Digit{"."}
 )
 
 // ---- end digits -----

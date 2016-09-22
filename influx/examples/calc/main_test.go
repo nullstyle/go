@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/nullstyle/go/influx"
+	"github.com/nullstyle/go/influx/influxtest"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestCalculator(t *testing.T) {
@@ -20,6 +20,10 @@ func TestCalculator(t *testing.T) {
 			Name:     "1+2",
 			Actions:  []influx.Action{One, Add{}, Two, Equals{}},
 			Expected: "3",
+		}, {
+			Name:     "1.01+2",
+			Actions:  []influx.Action{One, Dot, Zero, One, Add{}, Two, Equals{}},
+			Expected: "3.01",
 		},
 		{
 			Name:     "45-6",
@@ -62,6 +66,27 @@ func TestCalculator(t *testing.T) {
 			},
 			Expected: "1",
 		},
+		{
+			Name: "plus-minus",
+			Actions: []influx.Action{
+				One, PlusMinus{},
+			},
+			Expected: "-1",
+		},
+		{
+			Name: "plus-minus: after calc",
+			Actions: []influx.Action{
+				One, Add{}, One, Equals{}, PlusMinus{},
+			},
+			Expected: "-2",
+		},
+		{
+			Name: "clear",
+			Actions: []influx.Action{
+				One, One, Clear{},
+			},
+			Expected: "",
+		},
 	}
 
 	for _, kase := range cases {
@@ -69,14 +94,7 @@ func TestCalculator(t *testing.T) {
 
 			// setup
 			var c Calculator
-			store, err := influx.New(&c)
-			require.NoError(t, err)
-
-			// run actions
-			for i, a := range kase.Actions {
-				err := store.Dispatch(a)
-				assert.NoError(t, err, "key entry failed: %d", i)
-			}
+			influxtest.NewFromState(t, &c, kase.Actions...)
 
 			// check result
 			actual := c.Display()
@@ -84,6 +102,59 @@ func TestCalculator(t *testing.T) {
 				kase.Expected, actual,
 				"bad: %s != %s", kase.Name, actual,
 			)
+		})
+	}
+
+	// failure cases: every action but the last should succeed
+	fails := []struct {
+		Name    string
+		Actions []influx.Action
+	}{
+		{
+			Name: "invalid decimal: left side",
+			Actions: []influx.Action{
+				One, Dot, Dot, One, Add{}, One, Equals{},
+			},
+		},
+		{
+			Name: "invalid decimal: right side",
+			Actions: []influx.Action{
+				One, Add{}, One, Dot, Dot, One, Equals{},
+			},
+		},
+		{
+			Name: "invalid decimal: plus-minus",
+			Actions: []influx.Action{
+				One, Dot, Dot, One, PlusMinus{},
+			},
+		},
+		{
+			Name: "invalid decimal: multiple operators",
+			Actions: []influx.Action{
+				One, Add{}, One, Dot, Dot, One, Add{},
+			},
+		},
+		{
+			Name: "invalid decimal: multiple operators",
+			Actions: []influx.Action{
+				One, Add{}, One, Add{}, One, Dot, Dot, One, Equals{},
+			},
+		},
+	}
+
+	for _, kase := range fails {
+		t.Run(kase.Name, func(t *testing.T) {
+			actions := kase.Actions
+			setup := actions[1 : len(actions)-1]
+			trigger := actions[len(actions)-1]
+
+			// setup
+			var c Calculator
+			store := influxtest.NewFromState(t, &c, setup...)
+
+			err := store.Dispatch(trigger)
+			assert.Error(t, err)
+
 		})
 	}
 }
