@@ -18,7 +18,9 @@ import (
 
 //go:generate mockery -name Handler -output ./influxtest -case=underscore -outpkg=influxtest
 
-// Action represents a type that can affect an influx.State.
+// Action represents a action to be dispatched against a influx store. Handler
+// attached to points of the state managed by an influx store interrogate the
+// concrete type of an action to respond (or not respond) appropriately.
 type Action interface {
 }
 

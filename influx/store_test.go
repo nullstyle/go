@@ -191,19 +191,6 @@ func TestStore_Dispatch_ErrorHook(t *testing.T) {
 		// TODO
 		assert.Error(t, err)
 	})
-
-	// t.Run("sad path: erroring hook", func(t *testing.T) {
-	// 	_, store := baseTest(t)
-	// 	store.UseHooks(BeforeDispatchFunc(func(ctx context.Context, action Action) error {
-	// 		return errors.New("kaboom")
-	// 	}))
-
-	// 	// check after dispatch is called
-	// 	err := store.Dispatch(struct{}{})
-	// 	if assert.Error(t, err) {
-
-	// 	}
-	// })
 }
 
 func TestStore_Get(t *testing.T) {
