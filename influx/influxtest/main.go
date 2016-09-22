@@ -90,6 +90,9 @@ func NewFromState(
 ) *influx.Store {
 	store, err := influx.New(state)
 	require.NoError(t, err)
+
+	Do(t, store, actions...)
+
 	return store
 }
 
