@@ -25,17 +25,19 @@ func TestClient_Get(t *testing.T) {
 	var state clientTestState
 	store := influxtest.NewFromState(t, &state)
 	ctx := influx.Context(context.Background(), store)
-	state.Response, err = client.Get(ctx, "https://google.com")
+	state.Request, err = client.Get(ctx, "https://google.com")
 
 	if assert.NoError(t, err) {
 		store.Wait()
-		if assert.True(t, state.Response.Done, "request isn't done yet") {
-			assert.Equal(t, 200, state.Response.Resp.StatusCode)
+		if assert.True(t, state.Request.IsDone(), "request isn't done yet") {
+			resp, err := state.Request.Response()
+
+			assert.Equal(t, 200, resp.StatusCode)
 			assert.NoError(t, err)
 		}
 	}
 }
 
 type clientTestState struct {
-	Response
+	Request
 }

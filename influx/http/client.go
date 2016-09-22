@@ -12,30 +12,26 @@ import (
 func (client *Client) Get(
 	ctx context.Context,
 	url string,
-) (Response, error) {
+) (Request, error) {
 
 	store, err := influx.FromContext(ctx)
 	if err != nil {
-		return Response{}, errors.Wrap(err, "get store failed")
+		return Request{}, errors.Wrap(err, "get store failed")
 	}
 
-	var result Response
+	var result Request
 	result.Request.ID = client.nextID
 	client.nextID++
 
 	req, err := http.NewRequest("GET", url, nil)
 	req = req.WithContext(ctx)
 	if err != nil {
-		return Response{}, errors.Wrap(err, "make request failed")
+		return Request{}, errors.Wrap(err, "make request failed")
 	}
 
 	store.Go(func() {
 		resp, err := client.Raw.Do(req)
-		if err != nil {
-			result.Err = err
-		} else {
-			result.Resp = resp
-		}
+		result.finish(resp, err)
 
 		store.Dispatch(&result)
 	})
