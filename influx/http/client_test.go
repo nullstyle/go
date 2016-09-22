@@ -4,17 +4,38 @@ import (
 	"context"
 	"testing"
 
+	"github.com/nullstyle/go/influx"
+	"github.com/nullstyle/go/influx/influxtest"
 	"github.com/stellar/go/support/http/httptest"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestClient_Get(t *testing.T) {
-	// store, mock := influxtest.NewService()
 
+	http := httptest.NewClient()
+	http.On("GET", "https://google.com").ReturnString(200, "hello")
 	client := &Client{
-		Raw: httptest.NewClient(),
+		Raw: http,
 	}
 
+	// fails when not called from within a context that can read a store
 	_, err := client.Get(context.Background(), "https://google.com")
-	assert.Error(t, err)
+	assert.EqualError(t, err, "get store failed: no store in context")
+
+	var state clientTestState
+	store := influxtest.NewFromState(t, &state)
+	ctx := influx.Context(context.Background(), store)
+	state.Response, err = client.Get(ctx, "https://google.com")
+
+	if assert.NoError(t, err) {
+		store.Wait()
+		if assert.True(t, state.Response.Done, "request isn't done yet") {
+			assert.Equal(t, 200, state.Response.Resp.StatusCode)
+			assert.NoError(t, err)
+		}
+	}
+}
+
+type clientTestState struct {
+	Response
 }

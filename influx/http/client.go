@@ -8,8 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Do runs the provided request after connecting it to the provided dispatch
-// context.
+// Get makes a get request
 func (client *Client) Get(
 	ctx context.Context,
 	url string,
@@ -30,8 +29,7 @@ func (client *Client) Get(
 		return Response{}, errors.Wrap(err, "make request failed")
 	}
 
-	go func() {
-
+	store.Go(func() {
 		resp, err := client.Raw.Do(req)
 		if err != nil {
 			result.Err = err
@@ -40,7 +38,7 @@ func (client *Client) Get(
 		}
 
 		store.Dispatch(&result)
-	}()
+	})
 
 	return result, nil
 }
