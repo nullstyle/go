@@ -30,7 +30,7 @@ func TestClient_Get(t *testing.T) {
 	if assert.NoError(t, err) {
 		store.Wait()
 		if assert.True(t, state.Request.IsDone(), "request isn't done yet") {
-			resp, err := state.Request.Response()
+			resp, err := state.Request.Result()
 
 			assert.Equal(t, 200, resp.StatusCode)
 			assert.NoError(t, err)

@@ -11,19 +11,21 @@ import (
 
 // IsDone returns true if the request has been completed
 func (req *Request) IsDone() bool {
-	req.lock.Lock()
-	defer req.lock.Unlock()
+	if req.result == nil {
+		return false
+	}
 
-	return (req.resp != nil || req.err != nil)
+	resp, err := req.result.get()
+
+	return resp != nil || err != nil
 }
 
-// Response returns the response state of the request, as of the latest
-// dispatch.
-func (req *Request) Response() (*http.Response, error) {
-	req.lock.Lock()
-	defer req.lock.Unlock()
-
-	return req.resp, req.err
+// Result returns the response and error state of the request
+func (req *Request) Result() (*http.Response, error) {
+	if req.result == nil {
+		return nil, nil
+	}
+	return req.result.get()
 }
 
 // HandleAction implements influx.Handler for the http system.
@@ -45,9 +47,10 @@ func (state *Request) HandleAction(
 			return errors.New("duplicate http response seen")
 		}
 
-		state.lock.Lock()
-		state.resp, state.err = action.Response()
-		state.lock.Unlock()
+		// copy the result
+		resp, err := action.Result()
+		state.result = &result{}
+		state.result.finish(resp, err)
 	}
 
 	return nil
@@ -64,11 +67,12 @@ func (req *Request) MarshalJSON() ([]byte, error) {
 		ID    string
 		State interface{}
 	}
+	resp, err := req.Result()
 	switch {
-	case req.err != nil:
-		state.State = req.err.Error()
-	case req.resp != nil:
-		state.State = req.resp.Status
+	case err != nil:
+		state.State = err.Error()
+	case resp != nil:
+		state.State = resp.Status
 	default:
 		state.State = "pending"
 	}
@@ -79,13 +83,6 @@ func (req *Request) MarshalJSON() ([]byte, error) {
 	}
 
 	return enc, nil
-}
-
-func (req *Request) finish(resp *http.Response, err error) {
-	req.lock.Lock()
-	req.lock.Unlock()
-	req.resp = resp
-	req.err = err
 }
 
 var _ influx.Handler = &Request{}

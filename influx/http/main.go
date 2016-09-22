@@ -2,7 +2,6 @@ package http
 
 import (
 	"net/http"
-	"sync"
 
 	"github.com/nullstyle/go/influx"
 
@@ -37,15 +36,7 @@ type Request struct {
 	// Request represents the request that originated this response.
 	influx.Request
 
-	// resp is the response to the request.  When non-nil, the request is complete
-	// and did not error.
-	resp *http.Response
-
-	// err is any error that occurred in when initiated the request. When non-nil,
-	// an error occurred at the http client when making the request.
-	err error
-
-	lock sync.Mutex
+	result *result
 }
 
 var _ HTTP = http.DefaultClient

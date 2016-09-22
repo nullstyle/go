@@ -19,22 +19,28 @@ func (client *Client) Get(
 		return Request{}, errors.Wrap(err, "get store failed")
 	}
 
-	var result Request
-	result.Request.ID = client.nextID
+	var result result
+
+	req := Request{
+		Request: influx.Request{
+			ID: client.nextID,
+		},
+		result: &result,
+	}
 	client.nextID++
 
-	req, err := http.NewRequest("GET", url, nil)
-	req = req.WithContext(ctx)
+	stdreq, err := http.NewRequest("GET", url, nil)
+	stdreq = stdreq.WithContext(ctx)
 	if err != nil {
 		return Request{}, errors.Wrap(err, "make request failed")
 	}
 
 	store.Go(func() {
-		resp, err := client.Raw.Do(req)
+		resp, err := client.Raw.Do(stdreq)
 		result.finish(resp, err)
 
-		store.Dispatch(&result)
+		store.Dispatch(&req)
 	})
 
-	return result, nil
+	return req, nil
 }
