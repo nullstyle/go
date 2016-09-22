@@ -18,11 +18,9 @@ func TestResponse(t *testing.T) {
 
 	req := &Request{
 		Request: influx.Request{ID: 1},
-		result: &result{
-			Response: &http.Response{StatusCode: 200},
-			Err:      nil,
-		},
+		result:  &result{},
 	}
+	req.result.finish(&http.Response{StatusCode: 200}, nil)
 
 	state.Req1.Request.ID = 1
 	state.Req2.Request.ID = 2
@@ -30,9 +28,10 @@ func TestResponse(t *testing.T) {
 	influxtest.NewFromState(t, &state, req)
 
 	if assert.True(t, state.Req1.IsDone(), "request 1 isn't done") {
-		resp, err := state.Req1.Result()
-		assert.Equal(t, req.result.Response, resp)
-		assert.Equal(t, req.result.Err, err)
+		actual, aerr := state.Req1.Result()
+		expected, eerr := state.Req1.Result()
+		assert.Equal(t, expected, actual)
+		assert.Equal(t, eerr, aerr)
 	}
 
 	if assert.False(t, state.Req2.IsDone(), "request 2 is mistakenly done") {

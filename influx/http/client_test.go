@@ -39,5 +39,5 @@ func TestClient_Get(t *testing.T) {
 }
 
 type clientTestState struct {
-	Request
+	*Request
 }
