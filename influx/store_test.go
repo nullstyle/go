@@ -16,7 +16,7 @@ import (
 func TestStore_Dispatch(t *testing.T) {
 	state, store := baseTest(t)
 
-	err := store.Dispatch(TestAction{Amount: 2})
+	err := store.Dispatch(context.Background(), TestAction{Amount: 2})
 	if assert.NoError(t, err) {
 		assert.Equal(t, 2, state.Counter)
 		assert.True(t, state.Child.Called, "child handler not called")
@@ -33,7 +33,7 @@ func TestStore_Dispatch_AfterHook(t *testing.T) {
 		}))
 
 		// check after dispatch is called
-		err := store.Dispatch(struct{}{})
+		err := store.Dispatch(context.Background(), struct{}{})
 		if assert.NoError(t, err) {
 			assert.True(t, called, "after fn wasn't called")
 		}
@@ -46,7 +46,7 @@ func TestStore_Dispatch_AfterHook(t *testing.T) {
 		}))
 
 		// check after dispatch is called
-		err := store.Dispatch(struct{}{})
+		err := store.Dispatch(context.Background(), struct{}{})
 		assert.Error(t, err)
 	})
 }
@@ -62,7 +62,7 @@ func TestStore_Dispatch_BeforeHook(t *testing.T) {
 		}))
 
 		// check after dispatch is called
-		err := store.Dispatch(struct{}{})
+		err := store.Dispatch(context.Background(), struct{}{})
 		if assert.NoError(t, err) {
 			assert.True(t, called, "before fn wasn't called")
 		}
@@ -75,7 +75,7 @@ func TestStore_Dispatch_BeforeHook(t *testing.T) {
 		}))
 
 		// check after dispatch is called
-		err := store.Dispatch(struct{}{})
+		err := store.Dispatch(context.Background(), struct{}{})
 		if assert.Error(t, err) {
 
 		}
@@ -98,11 +98,11 @@ func TestStore_Dispatch_Context(t *testing.T) {
 	// triggered in
 
 	// ensure context has store available before, after dispatch
-	err := store.Dispatch("")
+	err := store.Dispatch(context.Background(), "")
 	assert.NoError(t, err)
 
 	// ensure context is available during dispatch
-	err = store.Dispatch("check_store")
+	err = store.Dispatch(context.Background(), "check_store")
 	assert.NoError(t, err)
 }
 
@@ -127,7 +127,7 @@ func BenchmarkStore_Dispatch(b *testing.B) {
 			}
 
 			for i := 0; i < b.N; i++ {
-				err := store.Dispatch(kase.Action)
+				err := store.Dispatch(context.Background(), kase.Action)
 				if err != nil {
 					b.Errorf("error while dispatching: %s", err)
 					b.Fail()
@@ -146,7 +146,7 @@ func TestStore_Dispatch_ErrorHook(t *testing.T) {
 			return nil
 		}))
 
-		err := store.Dispatch("")
+		err := store.Dispatch(context.Background(), "")
 		if assert.NoError(t, err) {
 			assert.False(t, called, "error fn was called")
 		}
@@ -160,7 +160,7 @@ func TestStore_Dispatch_ErrorHook(t *testing.T) {
 			return nil
 		}))
 
-		err := store.Dispatch("boom")
+		err := store.Dispatch(context.Background(), "boom")
 		assert.Error(t, err)
 		assert.True(t, called, "error fn was not called")
 	})
@@ -177,7 +177,7 @@ func TestStore_Dispatch_ErrorHook(t *testing.T) {
 			return errors.New("kaboom")
 		}))
 
-		err := store.Dispatch("")
+		err := store.Dispatch(context.Background(), "")
 		assert.Error(t, err)
 		// assert.True(t, called, "error fn was not called")
 	})
@@ -188,7 +188,7 @@ func TestStore_Dispatch_ErrorHook(t *testing.T) {
 			return errors.New("hook error")
 		}))
 
-		err := store.Dispatch("boom")
+		err := store.Dispatch(context.Background(), "boom")
 		// TODO
 		assert.Error(t, err)
 	})
@@ -253,7 +253,7 @@ func TestStore_LifecycleEvents(t *testing.T) {
 		state.WillSaveWasCalled,
 		"WillSaveWasCalled was called early")
 
-	_, err = store.TakeSnapshot()
+	_, err = store.TakeSnapshot(context.Background())
 	require.NoError(t, err)
 	assert.True(t,
 		state.WillSaveWasCalled,
@@ -270,7 +270,7 @@ func TestStore_Save(t *testing.T) {
 
 	var out bytes.Buffer
 
-	err = store.Save(&out)
+	err = store.Save(context.Background(), &out)
 
 	if assert.NoError(t, err) {
 		var snap Snapshot
@@ -287,7 +287,7 @@ func TestStore_Save(t *testing.T) {
 	store, err = New(&chanState)
 	require.NoError(t, err)
 
-	err = store.Save(ioutil.Discard)
+	err = store.Save(context.Background(), ioutil.Discard)
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "take snapshot failed")
 	}
@@ -301,7 +301,7 @@ func TestStore_TakeSnapshot(t *testing.T) {
 	store, err := New(&state)
 	require.NoError(t, err)
 
-	snap, err := store.TakeSnapshot()
+	snap, err := store.TakeSnapshot(context.Background())
 	if assert.NoError(t, err) {
 		assert.True(t, snap.CreatedAt != time.Time{}, "CreatedAt isn't populated")
 
@@ -316,7 +316,7 @@ func TestStore_TakeSnapshot(t *testing.T) {
 	store, err = New(&busted)
 	require.NoError(t, err)
 
-	_, err = store.TakeSnapshot()
+	_, err = store.TakeSnapshot(context.Background())
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "StateWillSave dispatch failed")
 	}
@@ -326,7 +326,7 @@ func TestStore_TakeSnapshot(t *testing.T) {
 	store, err = New(&chanState)
 	require.NoError(t, err)
 
-	_, err = store.TakeSnapshot()
+	_, err = store.TakeSnapshot(context.Background())
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "encode state failed")
 	}

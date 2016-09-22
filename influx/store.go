@@ -13,12 +13,12 @@ import (
 )
 
 // Dispatch applies the provided action to the store
-func (store *Store) Dispatch(action Action) error {
+func (store *Store) Dispatch(ctx context.Context, action Action) error {
 	// TODO: think harder about concurrency protection
 	store.lock.Lock()
 	defer store.lock.Unlock()
 
-	return store.dispatch(action)
+	return store.dispatch(ctx, action)
 }
 
 // Done returns a channel that closes when all running tasks to complete.
@@ -66,8 +66,8 @@ func (store *Store) Get(dest interface{}) error {
 }
 
 // Save writes the state to w
-func (store *Store) Save(w io.Writer) error {
-	snapshot, err := store.TakeSnapshot()
+func (store *Store) Save(ctx context.Context, w io.Writer) error {
+	snapshot, err := store.TakeSnapshot(ctx)
 	if err != nil {
 		return errors.Wrap(err, "take snapshot failed")
 	}
@@ -85,11 +85,11 @@ func (store *Store) Save(w io.Writer) error {
 }
 
 // TakeSnapshot serializes the current state into a new snapshot
-func (store *Store) TakeSnapshot() (Snapshot, error) {
+func (store *Store) TakeSnapshot(ctx context.Context) (Snapshot, error) {
 	store.lock.Lock()
 	defer store.lock.Unlock()
 
-	err := store.dispatch(StateWillSave)
+	err := store.dispatch(ctx, StateWillSave)
 	if err != nil {
 		return Snapshot{}, errors.Wrap(err, "StateWillSave dispatch failed")
 	}
@@ -137,10 +137,15 @@ func (store *Store) UseHooks(hook Hook) {
 	}
 }
 
-func (store *Store) dispatch(action Action) error {
+func (store *Store) dispatch(ctx context.Context, action Action) error {
+	val := ctx.Value(contextKeys.store)
+	if val != nil {
+		return errors.New("recursive dispatch")
+	}
+
 	// create the dispatch context
 	// TODO: probably want to add a configurable deadline or timeout here
-	ctx := Context(context.Background(), store)
+	ctx = Context(ctx, store)
 
 	// run the before dispatch hooks
 	for i, hook := range store.hooks.before {
@@ -239,7 +244,7 @@ func (store *Store) init() error {
 
 	// TODO: get initial action plan, cache it
 
-	err := store.Dispatch(StateLoaded)
+	err := store.Dispatch(context.Background(), StateLoaded)
 	if err != nil {
 		return errors.Wrap(err, "StateLoaded failed")
 	}

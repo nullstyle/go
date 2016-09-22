@@ -2,7 +2,7 @@ package http
 
 import (
 	"context"
-	http "net/http"
+	"net/http"
 
 	"github.com/nullstyle/go/influx"
 	"github.com/pkg/errors"
@@ -12,35 +12,29 @@ import (
 func (client *Client) Get(
 	ctx context.Context,
 	url string,
-) (*Request, error) {
+) (Result, error) {
 
 	store, err := influx.FromContext(ctx)
 	if err != nil {
-		return &Request{}, errors.Wrap(err, "get store failed")
+		return Result{}, errors.Wrap(err, "get store failed")
 	}
-
-	var result result
-
-	req := &Request{
-		Request: influx.Request{
-			ID: client.nextID,
-		},
-		result: &result,
-	}
-	client.nextID++
 
 	stdreq, err := http.NewRequest("GET", url, nil)
 	stdreq = stdreq.WithContext(ctx)
 	if err != nil {
-		return &Request{}, errors.Wrap(err, "make request failed")
+		return Result{}, errors.Wrap(err, "make request failed")
 	}
+
+	req, res := influx.NewRequest()
 
 	store.Go(func() {
 		resp, err := client.Raw.Do(stdreq)
-		result.finish(resp, err)
+		res.Finish(resp, err)
 
-		store.Dispatch(req)
+		store.Dispatch(influx.Done{req})
 	})
 
-	return req, nil
+	return Result{
+		result: &res,
+	}, nil
 }

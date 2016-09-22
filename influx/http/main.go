@@ -31,12 +31,12 @@ type HTTP interface {
 }
 
 // Request is an influx component that represents an http request.
-type Request struct {
+type Result struct {
 
 	// Request represents the request that originated this response.
 	influx.Request
 
-	result *result
+	result *influx.Result
 }
 
 var _ HTTP = http.DefaultClient

@@ -66,12 +66,12 @@ func TestNew(t *testing.T) {
 
 func TestNewRequest(t *testing.T) {
 	// increments id
-	r1, _ := NewRequest()
-	r2, _ := NewRequest()
-	r3, _ := NewRequest()
+	r1 := NewRequest()
+	r2 := NewRequest()
+	r3 := NewRequest()
 
-	assert.Equal(t, r1.ID+1, r2.ID)
-	assert.Equal(t, r2.ID+1, r3.ID)
+	assert.Equal(t, r1.(requestID)+1, r2.(requestID))
+	assert.Equal(t, r2.(requestID)+1, r3.(requestID))
 
 	// doesn't race
 	var wg sync.WaitGroup

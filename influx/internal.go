@@ -2,6 +2,7 @@ package influx
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"sync"
 )
@@ -30,6 +31,16 @@ type contextKey int
 
 // lifecycleKeys represents one of the influx lifecycle events
 type lifecycleKey int
+
+// requestID is a influx.Request implementation that simply uses an incrementing
+// integer to identify requests.
+type requestID int
+
+var _ Request = requestID(-1)
+
+func (r requestID) String() string {
+	return fmt.Sprintf("request[%d]", r)
+}
 
 type afterFunc struct {
 	Fn AfterFunc

@@ -9,6 +9,7 @@ package influx
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"sync"
 	"time"
@@ -71,6 +72,22 @@ type Hooks interface {
 // Named represent a value that know's its own name
 type Named interface {
 	Name() string
+}
+
+type Result struct {
+	lock sync.Mutex
+	req  Request
+	ret  interface{}
+	err  error
+}
+
+// Request is one of the fundamental methods of inter-component communication.
+// It is used to build request/response style patterns of communication within
+// influx.  For an example usage, see the influx/http package.
+type Request interface {
+
+	// A request should be printable for debugging purposes
+	fmt.Stringer
 }
 
 // Snapshot is a snapshot of a store's state
@@ -147,15 +164,11 @@ func New(state interface{}) (*Store, error) {
 	return store, nil
 }
 
-func NewRequest() (Request, Result) {
+func NewRequest() Request {
 	requestLock.Lock()
 	id := nextRequest
 	nextRequest++
 	requestLock.Unlock()
 
-	req := Request{ID: id}
-	res := Result{}
-	res.start(req)
-
-	return Request{ID: id}, res
+	return requestID(id)
 }
