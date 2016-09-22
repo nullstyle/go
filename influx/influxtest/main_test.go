@@ -45,4 +45,7 @@ func TestState(t *testing.T) {
 
 	err = store.Dispatch(ActionDispatchError)
 	assert.Error(t, err)
+
+	err = store.Dispatch(struct{}{})
+	assert.NoError(t, err, "test store is not extendable")
 }

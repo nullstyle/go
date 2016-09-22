@@ -13,7 +13,7 @@ func (state *State) HandleAction(
 	action influx.Action,
 ) error {
 
-	switch action.(string) {
+	switch action {
 	case ActionInc:
 		state.Counter++
 	case ActionDec:
