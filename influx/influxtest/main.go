@@ -3,6 +3,7 @@
 package influxtest
 
 import (
+	"context"
 	"testing"
 
 	"reflect"
@@ -38,11 +39,19 @@ type State struct {
 	Counter int
 }
 
+// ResponseTrap is a test component that records the context seen when the
+// contained request is dispatched during a test.  This makes it easy to then
+// extract the result in your tests to assert on content of the context.
+type ResponseTrap struct {
+	influx.Request
+	SeenCtx context.Context
+}
+
 // Do runs the provided actions against the store, ensuring none of them cause
 // dispatch to return an error.  Useful for setting up a test scenario.
 func Do(t *testing.T, store *influx.Store, actions ...influx.Action) {
 	for i, a := range actions {
-		err := store.Dispatch(a)
+		err := store.Dispatch(context.Background(), a)
 		require.NoError(t, err, "action[%d] failed", i)
 	}
 }
@@ -63,7 +72,7 @@ func Hook(t *testing.T, cases []HookCase) {
 		store.UseHooks(hook)
 
 		for _, action := range kase.Actions {
-			store.Dispatch(action)
+			store.Dispatch(context.Background(), action)
 		}
 
 		testv := reflect.ValueOf(kase.Test)
