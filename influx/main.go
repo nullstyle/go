@@ -55,6 +55,9 @@ type Handler interface {
 	HandleAction(ctx context.Context, action Action) error
 }
 
+// HandlerFunc represents a function that can respond to an action
+type HandlerFunc func(ctx context.Context, action Action) error
+
 // Hook represents a value that can plug in to the influx lifecycle.  A value
 // provided as a Hook should implement one or more of the hook interfaces.  See
 // the "Hooks" type for a list of available hooks.
@@ -74,6 +77,7 @@ type Named interface {
 	Name() string
 }
 
+// TODO: I think this has been made obselete.  check into it after current commit
 type Result struct {
 	lock sync.Mutex
 	req  Request

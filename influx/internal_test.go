@@ -54,6 +54,13 @@ func (state *DispatchCount) HandleAction(
 	return nil
 }
 
+func (state *HandlerFunc) HandleAction(
+	ctx context.Context,
+	action Action,
+) error {
+	return (*state)(ctx, action)
+}
+
 type LifecycleTest struct {
 	LoadWasCalled     bool
 	WillSaveWasCalled bool
