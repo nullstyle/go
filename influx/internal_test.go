@@ -40,6 +40,20 @@ func (state *BreakAtWillSaveTest) HandleAction(
 	return errors.Errorf("unexpected message dispatched: %s", action)
 }
 
+// DispatchCount is a test component that records the count of dispatches that
+// have called its HandleAction method.
+type DispatchCount struct {
+	Value int
+}
+
+func (state *DispatchCount) HandleAction(
+	ctx context.Context,
+	action Action,
+) error {
+	state.Value++
+	return nil
+}
+
 type LifecycleTest struct {
 	LoadWasCalled     bool
 	WillSaveWasCalled bool

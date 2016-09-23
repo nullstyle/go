@@ -194,6 +194,26 @@ func TestStore_Dispatch_ErrorHook(t *testing.T) {
 	})
 }
 
+func TestStore_Dispatch_DoubleDispatch(t *testing.T) {
+	// This is a known issue test that identifies and reproduces a bug in influx.
+	// When using states that have embedded structs in them, the way we search for
+	// handlers causes a second call to HandleAction to be made.
+
+	var state struct {
+		DispatchCount
+		Correct DispatchCount
+	}
+
+	_, err := New(&state)
+	require.NoError(t, err)
+	// BROKEN: StateLoaded is being dispatched called twice
+	assert.Equal(t, 2, state.DispatchCount.Value)
+
+	// Working
+	assert.Equal(t, 1, state.Correct.Value)
+
+}
+
 func TestStore_Go(t *testing.T) {
 	_, store := baseTest(t)
 	trigger := make(chan int)
