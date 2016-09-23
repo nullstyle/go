@@ -1,6 +1,7 @@
 package trace
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -16,12 +17,13 @@ func (s *Snapshot) Age() time.Duration {
 	return time.Since(s.InitialState.CreatedAt)
 }
 
-// Checkpoint records the
+// Checkpoint overwrites the saved state in this snapshot with the current state
+// of the provided store and then resets the recorded set of dispatches.
 func (s *Snapshot) Checkpoint(store *influx.Store) error {
 	s.InitialState.CreatedAt = time.Now()
 
 	var err error
-	s.InitialState, err = store.TakeSnapshot()
+	s.InitialState, err = store.TakeSnapshot(context.Background())
 	if err != nil {
 		return errors.Wrap(err, "store snapshot failed")
 	}

@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"log"
 	"testing"
 
 	"github.com/nullstyle/go/influx"
@@ -26,24 +25,24 @@ func TestClient_Get(t *testing.T) {
 	var state clientTestState
 	store := influxtest.NewFromState(t, &state)
 	ctx := influx.Context(context.Background(), store)
-	state.Result, err = client.Get(ctx, "https://google.com")
+
+	store.Do(func() {
+		state.Resp.Request, err = client.Get(ctx, "https://google.com")
+	})
 
 	if assert.NoError(t, err) {
+		// wait for all requests to complete (including any child dispatches they
+		// trigger)
 		<-store.Done()
 
-		if assert.True(t, state.Available(), "request isn't done yet") {
-			resp, err := state.Get()
-			log.Println("resp:", resp)
-			log.Println("err:", err)
-			if assert.NotNil(t, resp) {
-				assert.Equal(t, 200, resp.StatusCode)
+		if val, ok := state.Resp.AssertValue(t); ok {
+			if assert.IsType(t, val, result{}, val) {
+				assert.Equal(t, 200, val.(result).Response.StatusCode)
 			}
-
-			assert.NoError(t, err)
 		}
 	}
 }
 
 type clientTestState struct {
-	Result
+	Resp influxtest.ResponseTrap
 }

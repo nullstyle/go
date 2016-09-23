@@ -1,6 +1,8 @@
 package http
 
 import (
+	"context"
+	"errors"
 	"net/http"
 
 	"github.com/nullstyle/go/influx"
@@ -30,13 +32,20 @@ type HTTP interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// Request is an influx component that represents an http request.
-type Result struct {
+// Result returns the http response and error that was recorded onto the context
+// using the the request id provided.
+func Result(ctx context.Context, req influx.Request) (*http.Response, error) {
+	val := ctx.Value(req)
+	if val == nil {
+		return nil, errors.New("no result found")
+	}
 
-	// Request represents the request that originated this response.
-	influx.Request
+	result, ok := val.(result)
+	if !ok {
+		return nil, errors.New("invalid response found")
+	}
 
-	result *influx.Result
+	return result.Response, result.Err
 }
 
 var _ HTTP = http.DefaultClient

@@ -115,6 +115,17 @@ func (store *Store) Unwrap() interface{} {
 	return store.state
 }
 
+// Do performs a func within the influx stores mutex.  CAUTION: this method was
+// introduced solely to support race-safe testing.  It cannot be called
+// recursively and is intended to be primarily used to modify the state of the
+// store directly for each of testing.
+func (store *Store) Do(fn func()) {
+	store.lock.Lock()
+	defer store.lock.Unlock()
+
+	fn()
+}
+
 // UseHooks adds a function that will be called after each successful
 // dispatch of an action against the store
 func (store *Store) UseHooks(hook Hook) {

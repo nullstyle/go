@@ -1,6 +1,7 @@
 package calc
 
 import (
+	"context"
 	"testing"
 
 	"github.com/nullstyle/go/influx"
@@ -152,7 +153,7 @@ func TestCalculator(t *testing.T) {
 			var c Calculator
 			store := influxtest.NewFromState(t, &c, setup...)
 
-			err := store.Dispatch(trigger)
+			err := store.Dispatch(context.Background(), trigger)
 			assert.Error(t, err)
 
 		})

@@ -84,6 +84,8 @@ type Result struct {
 // Request is one of the fundamental methods of inter-component communication.
 // It is used to build request/response style patterns of communication within
 // influx.  For an example usage, see the influx/http package.
+//
+// NOTE: a request gets passed around between multiple go-routines.
 type Request interface {
 
 	// A request should be printable for debugging purposes
@@ -102,7 +104,9 @@ type Snapshot struct {
 type Store struct {
 	lock  sync.Mutex
 	tasks sync.WaitGroup
+
 	state interface{}
+
 	hooks struct {
 		before []BeforeHook
 		after  []AfterHook
@@ -164,6 +168,7 @@ func New(state interface{}) (*Store, error) {
 	return store, nil
 }
 
+// NewRequest creates a new request
 func NewRequest() Request {
 	requestLock.Lock()
 	id := nextRequest
