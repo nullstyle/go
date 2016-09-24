@@ -33,17 +33,6 @@ type Backend interface {
 	LookupPath(program string) (string, error)
 }
 
-type NotOnGoPathError struct {
-	Path   string
-	GoPath []string
-}
-
-// PkgNotFoundError is the error returns when a package cannot be found in the
-// GOPATH.
-type PkgNotFoundError struct {
-	Pkg string
-}
-
 // TODO: add BuildTime func
 
 // Executable asserts that program is present and executable on the local

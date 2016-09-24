@@ -79,6 +79,14 @@ func TestExpandPkg(t *testing.T) {
 		_, err := ExpandPkg("./pkg3")
 		assert.Error(t, err)
 	})
+
+	// empty package string
+	mockBackend(func(be *mocks.Backend) {
+		s, err := ExpandPkg("")
+		if assert.NoError(t, err) {
+			assert.Equal(t, "", s)
+		}
+	})
 }
 
 func TestIsPkgNotFound(t *testing.T) {
@@ -184,4 +192,17 @@ func TestRealPath(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.True(t, strings.HasSuffix(real, "/bin"), "real path doesn't end with /bin")
 	}
+}
+
+func TestVersion(t *testing.T) {
+
+	assert.Equal(t, "devel", Version())
+
+	oldVersion := version
+
+	version = "3.3"
+	assert.Equal(t, "3.3", Version())
+
+	version = oldVersion
+
 }
