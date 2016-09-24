@@ -9,8 +9,25 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// ErrorCase is a test case for an error's Error() method
+type ErrorCase struct {
+	Name string
+	Err  error
+	Msg  string
+}
+
+// Errors runs the provided error test cases
+func Errors(t *testing.T, cases []ErrorCase) {
+	for _, kase := range cases {
+		t.Run(kase.Name, func(t *testing.T) {
+			assert.Equal(t, kase.Msg, kase.Err.Error())
+		})
+	}
+}
 
 // FS creates a new tempdir for pkg and returns an FS rooted at the tempdir and
 // a function that deletes the whole filesystem when called.
