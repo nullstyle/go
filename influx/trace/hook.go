@@ -2,6 +2,7 @@ package trace
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/nullstyle/go/influx"
@@ -57,6 +58,9 @@ func (hook *Hook) finish(err error) {
 }
 
 func (hook *Hook) manageSnapshot(ctx context.Context) error {
+	if hook.snapshotting {
+		return nil
+	}
 
 	// TODO: don't calculate size on every dispatch
 	size, err := hook.Current.Size()
@@ -79,17 +83,22 @@ func (hook *Hook) manageSnapshot(ctx context.Context) error {
 		return nil
 	}
 
-	// take the snapshot
+	hook.snapshotting = true
 
 	store, err := influx.FromContext(ctx)
 	if err != nil {
 		return errors.Wrap(err, "get store failed")
 	}
 
-	err = hook.Current.Checkpoint(store)
-	if err != nil {
-		return errors.Wrap(err, "checkpoint failed")
-	}
+	// schedule the snapshot for as soon as it is safe
+	store.NextTick(ctx, func() {
+		err = hook.Current.Checkpoint(store)
+		if err != nil {
+			// TODO: replace with store managed logging facility, when it exists
+			log.Printf("WARN: checkpoint failed: %s", err)
+		}
+		hook.snapshotting = false
+	})
 
 	return nil
 }

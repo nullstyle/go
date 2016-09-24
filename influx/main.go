@@ -116,6 +116,11 @@ type Store struct {
 		after  []AfterHook
 		error  []ErrorHook
 	}
+
+	// postamble holds the functions queued for execution in the dispatch postamble by NextTick().
+	postamble []func()
+	// inPostamble holds the result of PostAmble()
+	inPostamble bool
 }
 
 // Context implements

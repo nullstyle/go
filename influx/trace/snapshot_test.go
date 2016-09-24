@@ -43,3 +43,14 @@ func TestSnapshot_Save_Smoke(t *testing.T) {
 	err = snap.Save(ioutil.Discard)
 	assert.EqualError(t, err, "empty initial state")
 }
+
+func TestSnapshot_Age(t *testing.T) {
+
+	s := Snapshot{}
+	now := time.Now()
+	expectedAge := 5 * time.Minute
+	s.InitialState.CreatedAt = now.Add(-expectedAge)
+
+	actualAge := s.Age()
+	assert.InDelta(t, expectedAge.Seconds(), actualAge.Seconds(), 1)
+}

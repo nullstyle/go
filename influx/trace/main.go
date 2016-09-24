@@ -29,7 +29,9 @@ type Hook struct {
 	MaxSize    uint64
 	TargetSize uint64
 	TargetAge  time.Duration
-	next       ActionTrace
+
+	next         ActionTrace
+	snapshotting bool
 }
 
 var _ influx.BeforeHook = &Hook{}

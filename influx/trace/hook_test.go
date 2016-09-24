@@ -13,17 +13,23 @@ func TestHook(t *testing.T) {
 	influxtest.Hook(t, []influxtest.HookCase{
 		{
 			Name: "records actions",
-			Actions: []influx.Action{
-				influxtest.ActionInc,
-				influxtest.ActionInc,
-				influxtest.ActionDec,
-			},
+			// Setup the tracing hook
 			Hook: &Hook{
 				TargetAge:  1 * time.Minute,
 				TargetSize: DefaultMaxSize,
 				MaxSize:    DefaultMaxSize,
 			},
+
+			// run the actions
+			Actions: []influx.Action{
+				influxtest.ActionInc,
+				influxtest.ActionInc,
+				influxtest.ActionDec,
+			},
+
+			// Assert hook state
 			Test: func(hook *Hook) {
+				t.Log(hook.Current.Dispatches)
 				if assert.Len(t, hook.Current.Dispatches, 3) {
 					disp := hook.Current.Dispatches
 					assert.Equal(t, influxtest.ActionInc, disp[0].Action)
@@ -33,3 +39,5 @@ func TestHook(t *testing.T) {
 		},
 	})
 }
+
+// TODO: add snapshotting tests, ensuring that

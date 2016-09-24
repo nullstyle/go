@@ -15,10 +15,75 @@ import (
 // Dispatch applies the provided action to the store
 func (store *Store) Dispatch(ctx context.Context, action Action) error {
 	// TODO: think harder about concurrency protection
-	store.lock.Lock()
-	defer store.lock.Unlock()
 
-	return store.dispatch(ctx, action)
+	// NOTES(scott): oh no! an IIFE in go! this just makes it more ergonomic way,
+	// IMO,  to ensure that the primary code path for dispatch is within the same
+	// function that locks the store for the purposes of dispatch. I believe it
+	// makes it easier to keep correct as code outside of the dispatch code path
+	// makes changes to stores functions.  If this stylistic abomination offends
+	// you, please go scream in a corner to vent your frustration.
+
+	err := func() error {
+		store.lock.Lock()
+		defer store.lock.Unlock()
+
+		val := ctx.Value(contextKeys.store)
+		if val != nil {
+			return errors.New("recursive dispatch")
+		}
+
+		// create the dispatch context
+		// TODO: probably want to add a configurable deadline or timeout here
+		ctx = Context(ctx, store)
+
+		// run the before dispatch hooks
+		for i, hook := range store.hooks.before {
+			err := hook.BeforeDispatch(ctx, action)
+			if err != nil {
+				store.errorHooks(ctx, store, err)
+				return &HookError{Index: i, Hook: hook, Err: err}
+			}
+		}
+
+		// TODO: run action middleware to mutate action
+		// TODO: plan the dispatch
+
+		// run the dispatch
+		statev := reflect.ValueOf(store.state).Elem()
+		err := store.dispatchValue(ctx, statev, action)
+		if err != nil {
+			store.errorHooks(ctx, store, err)
+			return err
+		}
+
+		// run the after dispatch hooks
+		for i, hook := range store.hooks.after {
+			err := hook.AfterDispatch(ctx, action)
+			if err != nil {
+				store.errorHooks(ctx, store, err)
+				return &HookError{Index: i, Hook: hook, Err: err}
+			}
+		}
+
+		return nil
+	}()
+	if err != nil {
+		return err
+	}
+
+	// create
+	// postambleCopy := make([]func(), len(store.postamble))
+	// for i, fn := range store.postamble {
+	// 	postambleCopy[i] = store.postamble[i]
+	// }
+	postambleCopy := store.postamble
+	store.postamble = store.postamble[0:0]
+
+	for _, fn := range postambleCopy {
+		fn()
+	}
+
+	return nil
 }
 
 // Done returns a channel that closes when all running tasks to complete.
@@ -65,6 +130,50 @@ func (store *Store) Get(dest interface{}) error {
 	return nil
 }
 
+// InPostamble returns true if the store is currently executing the postamble
+// functions. Hooks can use this to avoid scheduling another function during
+// postamble execution (triggering a panic).
+func (store *Store) InPostamble() bool {
+	return store.inPostamble
+}
+
+// NextTick schedules fn to be run immediately after the completion and
+// unlocking of the store, given the dispatch succeeds.  This function can be
+// used by handlers or hooks to schedule a function that needs to interact with
+// the store bound to ctx from outside of the giant store mutex but with
+// priority over other requesters. See the trace package, which needs to ensure
+// it can take a consistent snapshot with priority over all actions after the
+// dispatch has been resolved, for an example.
+//
+// NextTick should be treated similarly to spawning a goproc with regards to
+// error handling, but you cannot treat it conceptually similar to spawning a
+// goproc.  many of the techniques used in go for concurrent communication
+// within a single function will result in a deadlock when used with NextTick,
+// as the function provided to NextTick isn't called until outside the
+// function's scope of execution.  In other words, use caution.
+//
+// The hope is that this function, while potentially confusing and complex, will
+// allow for a greater diversity of middleware and components, allowing for
+// more skilled package developers to encapsulate the complexity with easy to
+// use components.
+//
+// NOTE: this function requires that the method receiver also be the store bound
+// to ctx.  This is to help prevent improper usage: this function should only be
+// called within a dispatch from an influx.Handler method or a hook method.
+func (store *Store) NextTick(ctx context.Context, fn func()) error {
+	cstore, err := FromContext(ctx)
+	if err != nil {
+		return errors.Wrap(err, "getno store context failed")
+	}
+
+	if cstore != store {
+		return errors.New("different receiver store and context store")
+	}
+
+	store.postamble = append(store.postamble, fn)
+	return nil
+}
+
 // Save writes the state to w
 func (store *Store) Save(ctx context.Context, w io.Writer) error {
 	snapshot, err := store.TakeSnapshot(ctx)
@@ -86,10 +195,7 @@ func (store *Store) Save(ctx context.Context, w io.Writer) error {
 
 // TakeSnapshot serializes the current state into a new snapshot
 func (store *Store) TakeSnapshot(ctx context.Context) (Snapshot, error) {
-	store.lock.Lock()
-	defer store.lock.Unlock()
-
-	err := store.dispatch(ctx, StateWillSave)
+	err := store.Dispatch(ctx, StateWillSave)
 	if err != nil {
 		return Snapshot{}, errors.Wrap(err, "StateWillSave dispatch failed")
 	}
@@ -146,48 +252,6 @@ func (store *Store) UseHooks(hook Hook) {
 	if ok {
 		store.hooks.error = append(store.hooks.error, errhook)
 	}
-}
-
-func (store *Store) dispatch(ctx context.Context, action Action) error {
-	val := ctx.Value(contextKeys.store)
-	if val != nil {
-		return errors.New("recursive dispatch")
-	}
-
-	// create the dispatch context
-	// TODO: probably want to add a configurable deadline or timeout here
-	ctx = Context(ctx, store)
-
-	// run the before dispatch hooks
-	for i, hook := range store.hooks.before {
-		err := hook.BeforeDispatch(ctx, action)
-		if err != nil {
-			store.errorHooks(ctx, store, err)
-			return &HookError{Index: i, Hook: hook, Err: err}
-		}
-	}
-
-	// TODO: run action middleware to mutate action
-	// TODO: plan the dispatch
-
-	// run the dispatch
-	statev := reflect.ValueOf(store.state).Elem()
-	err := store.dispatchValue(ctx, statev, action)
-	if err != nil {
-		store.errorHooks(ctx, store, err)
-		return err
-	}
-
-	// run the after dispatch hooks
-	for i, hook := range store.hooks.after {
-		err := hook.AfterDispatch(ctx, action)
-		if err != nil {
-			store.errorHooks(ctx, store, err)
-			return &HookError{Index: i, Hook: hook, Err: err}
-		}
-	}
-
-	return nil
 }
 
 func (store *Store) dispatchValue(

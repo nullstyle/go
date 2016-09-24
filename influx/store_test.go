@@ -281,6 +281,44 @@ func TestStore_LifecycleEvents(t *testing.T) {
 
 }
 
+func TestStore_NextTick(t *testing.T) {
+	trigger := 1
+	called := false
+
+	state := HandlerFunc(func(
+		ctx context.Context,
+		action Action,
+	) error {
+		if action != trigger {
+			return nil
+		}
+
+		if called {
+			return nil
+		}
+
+		store, err := FromContext(ctx)
+		require.NoError(t, err)
+
+		store.NextTick(ctx, func() {
+			called = true
+		})
+
+		return nil
+	})
+
+	store, err := New(&state)
+	require.NoError(t, err)
+	require.False(t, called, "initial store creation triggered test")
+
+	err = store.Dispatch(context.Background(), trigger)
+	if assert.NoError(t, err) {
+		assert.True(t, called)
+		assert.Len(t, store.postamble, 0)
+	}
+
+}
+
 func TestStore_Save(t *testing.T) {
 	state := TestState{
 		Counter: 3,
