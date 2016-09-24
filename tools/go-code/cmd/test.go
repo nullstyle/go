@@ -28,15 +28,17 @@ var testCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		do.Inside(pkgpath, func() {
+		err = do.Inside(pkgpath, func() {
 			eargs := []string{"dlv", "test", "--headless", "--listen=:2345", "--log"}
 			env := os.Environ()
 			err = syscall.Exec(electron, eargs, env)
 			if err != nil {
 				log.Fatal(err)
 			}
-
 		})
+		if err != nil {
+			log.Fatal(err)
+		}
 
 	},
 }
