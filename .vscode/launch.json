@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [{
+    "name": "test",
+    "type": "go",
+    "request": "launch",
+    "mode": "remote",
+    "remotePath": "${workspaceRoot}",
+    "port": 2345,
+    "host": "127.0.0.1",
+    "program": "${workspaceRoot}",
+    "env": {},
+    "args": []
+  }, {
+    "name": "go-code test",
+    "type": "go",
+    "request": "launch",
+    "mode": "remote",
+    "remotePath": "${workspaceRoot}",
+    "port": 2345,
+    "host": "127.0.0.1",
+    "program": "${workspaceRoot}",
+    "env": {},
+    "args": []
+  }]
+}

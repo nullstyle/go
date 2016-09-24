@@ -12,3 +12,4 @@ import:
 - package: github.com/stellar/go
   subpackages:
   - '...'
+- package: gopkg.in/godo.v2
