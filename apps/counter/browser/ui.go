@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -27,7 +28,7 @@ func (ui UI) Render() gr.Component {
 }
 
 func (ui UI) onClick(event *gr.Event) {
-	err := ui.Store.Dispatch(IncAction{})
+	err := ui.Store.Dispatch(context.TODO(), IncAction{})
 	if err != nil {
 		log.Println("error:", err)
 	}
