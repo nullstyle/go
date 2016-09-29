@@ -3,3 +3,4 @@
 .go-electron
 *.coverprofile
 /dist
+node_modules
