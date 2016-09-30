@@ -68,7 +68,7 @@ var buildCmd = &cobra.Command{
 		fmt.Fprintln(&buf, "global[\"gopm_modules\"] = gopm_modules;")
 
 		afero.WriteFile(env.FS, "tmp-gopm.js", buf.Bytes(), 0644)
-		// defer env.FS.Remove("tmp-gopm.js")
+		defer env.FS.Remove("tmp-gopm.js")
 
 		err = exec.Command("browserify", "tmp-gopm.js", "-o", output).Run()
 		if err != nil {
