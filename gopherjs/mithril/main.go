@@ -1,13 +1,14 @@
 package mithril
 
-import "github.com/gopherjs/gopherjs/js"
-
-//go:generate curl https://cdnjs.cloudflare.com/ajax/libs/mithril/0.2.5/mithril.js -o mithril.inc.js -s
+import (
+	"github.com/gopherjs/gopherjs/js"
+	"github.com/nullstyle/go/gopherjs/module"
+)
 
 var m *js.Object
 
 func init() {
-	m = js.Module.Get("exports")
+	m = module.Require("mithril")
 }
 
 // Version returns the version of the underlying Mithril library.
