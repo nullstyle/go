@@ -15,8 +15,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var output string
-
 // buildCmd represents the build command
 var buildCmd = &cobra.Command{
 	Use:   "build [PATH]",
@@ -86,5 +84,5 @@ func init() {
 		"output",
 		"o",
 		"gopm_generated.inc.js",
-		"name of generated file")
+		"output path (use '-' for stdout)")
 }
