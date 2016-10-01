@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gopherjs/gopherjs/js"
-	njs "github.com/nullstyle/go/gopherjs/js"
+	"github.com/nullstyle/go/gopherjs/module"
 )
 
 var (
@@ -18,7 +18,7 @@ func createWindow(width, height int) *js.Object {
 		"height": height,
 	})
 
-	dir := njs.Require("./node").Get("dirname").String()
+	dir := module.Require("./node").Get("dirname").String()
 	path := fmt.Sprintf(`file://%s/index.html`, dir)
 	// path := `file://index.html`
 
