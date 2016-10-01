@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "mithril": "^0.2.5"
+  },
+  "devDependencies": {
+    "mithril-query": "^1.0.0"
+  }
+}
