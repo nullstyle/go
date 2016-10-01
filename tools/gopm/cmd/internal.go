@@ -26,6 +26,29 @@ func newPackage() packageJson {
 	}
 }
 
+func autoPackage(pkg string) ([]byte, error) {
+	imports, testImports, err := deps(pkg)
+	if err != nil {
+		return nil, errors.Wrap(err, "load deps failed")
+	}
+
+	jsonImports, err := jsonPkgs(imports)
+	if err != nil {
+		return nil, errors.Wrap(err, "filter imports failed")
+	}
+
+	jsonTestImports, err := jsonPkgs(testImports)
+	if err != nil {
+		return nil, errors.Wrap(err, "filter test imports failed")
+	}
+
+	merged, err := mergeJsonDeps(jsonImports, jsonTestImports)
+	if err != nil {
+		return nil, errors.Wrap(err, "building package.json failed")
+	}
+	return merged, nil
+}
+
 func deps(pkg string) ([]string, []string, error) {
 
 	// onedep is the self-recursive function that

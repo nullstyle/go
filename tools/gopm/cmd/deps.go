@@ -41,22 +41,10 @@ var depsCmd = &cobra.Command{
 			log.Fatalf("pkg `%s` has curated package.json", pkg)
 		}
 
-		imports, testImports, err := deps(pkg)
+		merged, err := autoPackage(pkg)
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		jsonImports, err := jsonPkgs(imports)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		jsonTestImports, err := jsonPkgs(testImports)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		merged, err := mergeJsonDeps(jsonImports, jsonTestImports)
 
 		if output == "-" {
 			fmt.Println(string(merged))
