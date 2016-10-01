@@ -10,11 +10,11 @@ import (
 	"runtime"
 
 	"github.com/gopherjs/gopherjs/js"
-	njs "github.com/nullstyle/go/gopherjs/js"
+	"github.com/nullstyle/go/gopherjs/module"
 )
 
 var (
-	E = njs.Require("electron")
+	E = module.Require("electron")
 )
 
 // App represents a go-electron app

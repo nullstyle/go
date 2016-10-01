@@ -5,7 +5,7 @@ import (
 
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/nullstyle/go/electron"
-	njs "github.com/nullstyle/go/gopherjs/js"
+	"github.com/nullstyle/go/gopherjs/module"
 )
 
 var win *js.Object
@@ -14,8 +14,8 @@ func main() {
 	app := &electron.App{
 		Name:         "go-electron-example",
 		Version:      "0.1.0",
-		WindowWidth:  640,
-		WindowHeight: 480,
+		WindowWidth:  1200,
+		WindowHeight: 900,
 		OnReady:      ready,
 	}
 
@@ -23,6 +23,6 @@ func main() {
 }
 
 func ready(app *electron.App) {
-	dirname := njs.Require("./node").Get("dirname").String()
+	dirname := module.Require("./node").Get("dirname").String()
 	log.Println("in the ready callback:", dirname)
 }

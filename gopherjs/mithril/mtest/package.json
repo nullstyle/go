@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "mithril-query": "^1.0.0"
+  }
+}

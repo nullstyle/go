@@ -16,6 +16,7 @@ var checkCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ensureExecutable("npm")
 		ensureExecutable("browserify")
+		ensureExecutable("gopherjs")
 	},
 }
 

@@ -4,3 +4,4 @@
 *.coverprofile
 /dist
 node_modules
+gopm_generated.inc.js

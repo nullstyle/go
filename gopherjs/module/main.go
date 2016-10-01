@@ -16,10 +16,10 @@ func Require(module string) *js.Object {
 	}
 
 	switch {
-	case js.Global.Get("require") != nil:
-		return js.Global.Call("require", module)
-	case js.Global.Get("gopm_modules") != nil:
+	case js.Global.Get("gopm_modules") != js.Undefined:
 		return js.Global.Get("gopm_modules").Get(module)
+	case js.Global.Get("require") != js.Undefined:
+		return js.Global.Call("require", module)
 	default:
 		return nil
 	}
