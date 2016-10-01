@@ -89,6 +89,11 @@ var testCmd = &cobra.Command{
 		}
 
 		eargs := []string{"gopherjs", "test"}
+
+		if verbose {
+			eargs = append(eargs, "-v")
+		}
+
 		env := os.Environ()
 		err = syscall.Exec(gopherjs, eargs, env)
 		if err != nil {
@@ -99,4 +104,11 @@ var testCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(testCmd)
+	testCmd.Flags().BoolVarP(
+		&verbose,
+		"verbose",
+		"v",
+		false,
+		"run tests in verbose mode",
+	)
 }

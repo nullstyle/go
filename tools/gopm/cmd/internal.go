@@ -13,6 +13,7 @@ import (
 )
 
 var output string
+var verbose bool
 
 type packageJson struct {
 	Dependencies    map[string]string `json:"dependencies"`
