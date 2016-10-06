@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"log"
-	"syscall"
 
 	"os"
 	"os/exec"
@@ -54,7 +53,12 @@ var testCmd = &cobra.Command{
 				log.Fatal(err)
 			}
 
-			defer env.FS.Remove(jsonPath)
+			defer func() {
+				err := env.FS.Remove(jsonPath)
+				if err != nil {
+					log.Println("failed to remove auto package.json", err)
+				}
+			}()
 
 			pkgPath := filepath.Dir(jsonPath)
 			realPath, err := env.RealPath(pkgPath)
@@ -83,19 +87,17 @@ var testCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		gopherjs, err := exec.LookPath("gopherjs")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		eargs := []string{"gopherjs", "test"}
+		eargs := []string{"test"}
 
 		if verbose {
 			eargs = append(eargs, "-v")
 		}
 
-		env := os.Environ()
-		err = syscall.Exec(gopherjs, eargs, env)
+		gcmd := exec.Command("gopherjs", eargs...)
+		gcmd.Stderr = os.Stderr
+		gcmd.Stdout = os.Stdout
+
+		err = gcmd.Run()
 		if err != nil {
 			log.Fatal(err)
 		}
