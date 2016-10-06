@@ -10,6 +10,7 @@ import (
 
 	"github.com/nullstyle/go/env"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 )
 
 var output string
@@ -27,7 +28,39 @@ func newPackage() packageJson {
 	}
 }
 
-func autoPackage(pkg string) ([]byte, error) {
+// getPackageJSON returns either the manually written or automatically generated
+// package.json contents for a gopherjs package.
+func getPackageJSON(pkg string) (*packageJson, error) {
+	gjs, err := isGopherJS(pkg)
+	if err != nil {
+		return nil, errors.Wrap(err, "isGopherJS failed")
+	}
+
+	if !gjs {
+		return autoPackage(pkg)
+	}
+
+	jsonPath, err := jsonPath(pkg)
+	if err != nil {
+		return nil, errors.Wrap(err, "json-path failed")
+	}
+
+	var result packageJson
+	raw, err := afero.ReadFile(env.FS, jsonPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "read-file failed")
+	}
+
+	// load the dependnecies into a temporary location
+	err = json.Unmarshal(raw, &result)
+	if err != nil {
+		return nil, errors.Wrap(err, "unmarshal failed")
+	}
+
+	return &result, nil
+}
+
+func autoPackage(pkg string) (*packageJson, error) {
 	imports, testImports, err := deps(pkg)
 	if err != nil {
 		return nil, errors.Wrap(err, "load deps failed")
@@ -43,7 +76,7 @@ func autoPackage(pkg string) ([]byte, error) {
 		return nil, errors.Wrap(err, "filter test imports failed")
 	}
 
-	merged, err := mergeJsonDeps(jsonImports, jsonTestImports)
+	merged, err := mergeJSONDeps(jsonImports, jsonTestImports)
 	if err != nil {
 		return nil, errors.Wrap(err, "building package.json failed")
 	}
@@ -121,6 +154,20 @@ func expandPkg(arg string) string {
 	return ""
 }
 
+func gotoPkgDir(pkg string) error {
+	pkgPath, err := env.PkgPath(pkg)
+	if err != nil {
+		return errors.Wrap(err, "pkg-path failed")
+	}
+
+	err = os.Chdir(pkgPath)
+	if err != nil {
+		return errors.Wrap(err, "chdir failed")
+	}
+
+	return nil
+}
+
 func imports(pkg string) ([]string, []string, error) {
 	raw, err := exec.Command("go", "list", "-tags", "'js'", "-json", pkg).Output()
 	if err != nil {
@@ -136,6 +183,56 @@ func imports(pkg string) ([]string, []string, error) {
 		return nil, nil, errors.Wrap(err, "parse list output failed")
 	}
 	return parsed.Imports, parsed.TestImports, nil
+}
+
+func installModules(pkg string) error {
+	gjs, err := isGopherJS(pkg)
+	if err != nil {
+		return errors.Wrap(err, "isGopherJS failed")
+	}
+
+	jsonPath, err := jsonPath(pkg)
+	if err != nil {
+		return errors.Wrap(err, "get package.json path failed")
+	}
+
+	// write a temporary package.json by calculating the
+	// package.json for the package under test
+	if !gjs {
+
+		packageJSON, err := autoPackage(pkg)
+		if err != nil {
+			return errors.Wrap(err, "create package.json contents failed")
+		}
+
+		raw, err := json.MarshalIndent(packageJSON, "", "  ")
+		if err != nil {
+			return errors.Wrap(err, "marshal package.json failed")
+		}
+
+		err = afero.WriteFile(env.FS, jsonPath, raw, 0644)
+		if err != nil {
+			return errors.Wrap(err, "write package.json failed")
+		}
+
+		defer env.FS.Remove(jsonPath)
+	}
+
+	pkgPath := filepath.Dir(jsonPath)
+	realPath, err := env.RealPath(pkgPath)
+	if err != nil {
+		return errors.Wrap(err, "resolve real package.json path failed")
+	}
+
+	icmd := exec.Command("npm", "i")
+	icmd.Dir = realPath
+	err = icmd.Run()
+	if err != nil {
+		// TODO: output the installs stderr
+		return errors.Wrap(err, "`npm i` failed")
+	}
+
+	return nil
 }
 
 func isGopherJS(pkg string) (bool, error) {
@@ -182,4 +279,50 @@ func jsonPkgs(pkgs []string) ([]string, error) {
 	}
 
 	return ret, nil
+}
+
+// reads the package.json files at imports and timports, merges them into a
+// single json result.
+func mergeJSONDeps(imports, timports []string) (*packageJson, error) {
+	results := newPackage()
+
+	load := func(pkgs []string, dest map[string]string) error {
+		loaded := newPackage()
+		for _, pkg := range pkgs {
+			path, err := jsonPath(pkg)
+			if err != nil {
+				return errors.Wrap(err, "json-path failed")
+			}
+
+			raw, err := afero.ReadFile(env.FS, path)
+			if err != nil {
+				return errors.Wrap(err, "read-file failed")
+			}
+
+			// load the dependnecies into a temporary location
+			err = json.Unmarshal(raw, &loaded)
+			if err != nil {
+				return errors.Wrap(err, "unmarshal failed")
+			}
+
+			// copy the loaded dependencies into the results
+			for mod, version := range loaded.Dependencies {
+				dest[mod] = version
+			}
+		}
+
+		return nil
+	}
+
+	err := load(imports, results.Dependencies)
+	if err != nil {
+		return nil, errors.Wrap(err, "load imports failed")
+	}
+
+	err = load(timports, results.DevDependencies)
+	if err != nil {
+		return nil, errors.Wrap(err, "load test imports failed")
+	}
+
+	return &results, nil
 }

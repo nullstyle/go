@@ -5,10 +5,7 @@ import (
 
 	"os"
 	"os/exec"
-	"path/filepath"
 
-	"github.com/nullstyle/go/env"
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
@@ -30,59 +27,12 @@ var testCmd = &cobra.Command{
 			log.Fatal("too many args")
 		}
 
-		gjs, err := isGopherJS(pkg)
+		err = installModules(pkg)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		// write a temporary package.json by calculating the
-		// package.json for the package under test
-		if !gjs {
-			jsonPath, err := jsonPath(pkg)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			packageJson, err := autoPackage(pkg)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			err = afero.WriteFile(env.FS, jsonPath, packageJson, 0644)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			defer func() {
-				err := env.FS.Remove(jsonPath)
-				if err != nil {
-					log.Println("failed to remove auto package.json", err)
-				}
-			}()
-
-			pkgPath := filepath.Dir(jsonPath)
-			realPath, err := env.RealPath(pkgPath)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			err = os.Chdir(realPath)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			err = exec.Command("npm", "i").Run()
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-
-		pkgPath, err := env.PkgPath(pkg)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = os.Chdir(pkgPath)
+		err = gotoPkgDir(pkg)
 		if err != nil {
 			log.Fatal(err)
 		}

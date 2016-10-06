@@ -1,15 +1,12 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
-
-	"encoding/json"
-
 	"os"
 
 	"github.com/nullstyle/go/env"
-	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
@@ -41,17 +38,22 @@ var depsCmd = &cobra.Command{
 			log.Fatalf("pkg `%s` has curated package.json", pkg)
 		}
 
-		merged, err := autoPackage(pkg)
+		npmDeps, err := autoPackage(pkg)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		raw, err := json.MarshalIndent(npmDeps, "", "  ")
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		if output == "-" {
-			fmt.Println(string(merged))
+			fmt.Println(string(raw))
 			os.Exit(0)
 		}
 
-		err = afero.WriteFile(env.FS, output, merged, 0644)
+		err = afero.WriteFile(env.FS, output, raw, 0644)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -67,55 +69,4 @@ func init() {
 		"o",
 		"-",
 		"output path (use '-' for stdout)")
-}
-
-// reads the package.json files at imports and timports, merges them into a
-// single json response.
-func mergeJsonDeps(imports, timports []string) ([]byte, error) {
-	results := newPackage()
-
-	load := func(pkgs []string, dest map[string]string) error {
-		loaded := newPackage()
-		for _, pkg := range pkgs {
-			path, err := jsonPath(pkg)
-			if err != nil {
-				return errors.Wrap(err, "json-path failed")
-			}
-
-			raw, err := afero.ReadFile(env.FS, path)
-			if err != nil {
-				return errors.Wrap(err, "read-file failed")
-			}
-
-			// load the dependnecies into a temporary location
-			err = json.Unmarshal(raw, &loaded)
-			if err != nil {
-				return errors.Wrap(err, "unmarshal failed")
-			}
-
-			// copy the loaded dependencies into the results
-			for mod, version := range loaded.Dependencies {
-				dest[mod] = version
-			}
-		}
-
-		return nil
-	}
-
-	err := load(imports, results.Dependencies)
-	if err != nil {
-		return nil, errors.Wrap(err, "load imports failed")
-	}
-
-	err = load(timports, results.DevDependencies)
-	if err != nil {
-		return nil, errors.Wrap(err, "load test imports failed")
-	}
-
-	ret, err := json.MarshalIndent(results, "", "  ")
-	if err != nil {
-		return nil, errors.Wrap(err, "marshal failed")
-	}
-
-	return ret, nil
 }
