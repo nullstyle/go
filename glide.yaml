@@ -6,3 +6,6 @@ import:
 - package: github.com/spf13/viper
 - package: github.com/spf13/afero
 - package: github.com/stretchr/testify
+- package: github.com/golang/protobuf
+  subpackages:
+  - proto
