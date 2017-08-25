@@ -6,3 +6,4 @@
 node_modules
 gopm_generated.inc.js
 /.vscode/*
+/tmp

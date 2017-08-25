@@ -2,17 +2,19 @@ language: go
 services:
 - postgres
 go:
-- '1.6'
-- '1.7'
+- '1.9'
 - tip
+env:
+  - CGO_ENABLED=0
 install:
 - go get github.com/mattn/goveralls
+- go get github.com/golang/dep/cmd/dep
 - go get github.com/Masterminds/glide
 - go get github.com/modocache/gover
 before_deploy:
 - go run ./support/scripts/build_release_artifacts/main.go
 script:
-- glide install
+- dep ensure
 - go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile
   {{.ImportPath}}"{{end}}' $(glide novendor) | xargs -L 1 sh -c
 - gover
@@ -21,7 +23,6 @@ matrix:
   fast_finish: true
   allow_failures:
   - go: tip
-  - go: '1.6'
 env:
   global:
   - secure: by7KWeL+JXzOdgzpgU1UmjAZrKuy/7B6O8QbOgoN3KXF1kCyq8ZdoJogD2P43ykGalLnFXwuPp9D0cHeDsg3CLSzRnmx9+BlkV/yLN9VT3wg6t61EGSnBTM3wZi7cWHS/OjZmukXcLy3GEtbYY+mUEdGXloTGzF3tb7sZ4hw1LWd5pEBT8fgZqjLbPDDb3c84QKeDrgGp/cyWWeZKqC+syEN9ktWQWjzLJkNWbkD0gJK9+od//xzOGFf3TqlujC7kPHrUevW7uKnyily/QQr0D3cKTlyfCiiFDNHXEVv++KpbmeBTTILD8AwKWy+taxGrXzXOBUHcdxQKyIS9EHHSYL9aEVz81F0OHR40g+MP5UXHGcjPbYqV59pyP6Rc6Me2A1lmUyHQZ2xMR3W0vWNQKHppfAWRUIFFWuH1XfI/+Epw2hUg7ZtXv9gFcYpbhD0XKaoo0y8npDEIlLHBlQZQ1NVRryoYNjBSoxduxn/JWrjzlMQpCOUTjRXT+M4Nq9jAUJOXhrZmR82Jr9whoYNamKByN0P+BkupaA/hAcMulGjEFHwKeS4gQlITGUGRcRyw5X8tkiEeEZDtLccDzDktUmr0nbj9rQfbLpPUkslxeT1ZbjEwgc5vh4tdF17g7h9C0M3lD/f/T8BVwqDFa2LHoE1uuKjerJwQvpkvuf6rjI=
@@ -34,4 +35,4 @@ deploy:
   on:
     repo: nullstyle/go
     tags: true
-    go: '1.6'
+    go: '1.9'
